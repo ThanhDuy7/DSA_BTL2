@@ -144,7 +144,7 @@ public:
 };
 */
 // Heap class
-
+/*
 template <typename E> class heap {
 private:
 	E* Heap; // Pointer to the heap array
@@ -154,16 +154,18 @@ private:
 	void siftdown(int pos) {
 		while (!isLeaf(pos)) { // Stop if pos is a leaf
 			int j = leftchild(pos); int rc = rightchild(pos);
-			if ((rc < n) && (Heap[rc] < Heap[j]))
-			j = rc; // Set j to greater child’s value
-			if (Heap[pos] < Heap[j]) return; // Done
+			if (rc < n) {
+				if (Heap[rc]->weight() < Heap[j]->weight()) 
+					j = rc; // Set j to greater child’s value
+			}
+			if (Heap[pos]->weight() < Heap[j]->weight()) return; // Done
 			swap(Heap[pos], Heap[j]);
 			pos = j; // Move down
 		}
 	}
 public:
 	heap(E* h, int num, int max) // Constructor
-	{ Heap = h; n = num; maxsize = max; buildHeap(); }
+	{ Heap = h; n = num; maxsize = max;}
 	int size() const // Return current heap size
 	{ return n; }
 	bool isLeaf(int pos) const // True if pos is a leaf
@@ -178,7 +180,6 @@ public:
 	{ for (int i=n/2-1; i>=0; i--) siftdown(i); }
 	// Insert "it" into the heap
 	void insert(const E& it) {
-		//Assert(n < maxsize, "Heap is full");
 		int curr = n++;
 		Heap[curr] = it; // Start at end of heap
 		// Now sift up until curr’s parent > curr
@@ -188,6 +189,12 @@ public:
 			curr = parent(curr);
 		}
 	}
+	void printHeap() const {
+        for (int i = 0; i < n; ++i) {
+            cout << Heap[i] << " ";
+        }
+        cout << std::endl;
+    }
 // Remove first value
 	E removefirst() {
 		//Assert (n > 0, "Heap is empty");
@@ -211,6 +218,7 @@ public:
 	return Heap[n];
 	}
 };
+*/
 
 
 // Huffman tree node abstract base class
@@ -253,48 +261,77 @@ public:
 template <typename E>
 class HuffTree {
 private:
-	HuffNode<E>* Root; // Tree root
+	HuffNode<E>* Root;
+	int order; // Tree root
 public:
-	HuffTree(E& val, int freq) // Leaf constructor
-	{ Root = new LeafNode<E>(val, freq); }
+	HuffTree(E& val, int freq, int order) // Leaf constructor
+	{ Root = new LeafNode<E>(val, freq); this->order = order;}
 	// Internal node constructor
-	HuffTree(HuffTree<E>* l, HuffTree<E>* r)
-	{ Root = new IntlNode<E>(l->root(), r->root()); }
+	HuffTree(HuffTree<E>* l, HuffTree<E>* r, int order)
+	{ Root = new IntlNode<E>(l->root(), r->root()); this->order = order;}
 	~HuffTree() {} // Destructor
 	HuffNode<E>* root() { return Root; } // Get root
-	int weight() { return Root->weight(); } // Root weight
-	void printHuffmanTree(HuffNode<E>* node, int indent = 0) {
-    if (node) {
+	int weight() { return Root->weight(); }
+	int Order() { return order;}// Root weight
+	void print(const std::string& prefix, HuffNode<E>* node, bool isLeft) {
+    if (node != nullptr) {
+        std::cout << prefix << (isLeft ? "|-- " : "\\-- ") << node->weight();
+		if (node->isLeaf()) {
+			cout<<static_cast<LeafNode<E>*>(node)->val();
+		}
+		cout<<endl;
         if (!node->isLeaf()) {
-            printHuffmanTree(static_cast<IntlNode<E>*>(node)->left(), indent + 4);
-        }
-        std::cout << std::string(indent, ' ');
-        if (node->isLeaf()) {
-            std::cout << static_cast<LeafNode<E>*>(node)->val() << ":" << node->weight() << std::endl;
-        } else {
-            std::cout << "Internal:" << node->weight() << std::endl;
-        }
-        if (!node->isLeaf()) {
-            printHuffmanTree(static_cast<IntlNode<E>*>(node)->right(), indent + 4);
-        }
+            print(prefix + (isLeft ? "|   " : "    "), static_cast<IntlNode<E>*>(node)->left(), true);
+            print(prefix + (isLeft ? "|   " : "    "), static_cast<IntlNode<E>*>(node)->right(), false);
+        } 
     }
 }
-};
+	void printHuffmanTree(HuffNode<E>* node) {
+		if (!node) {
+			std::cout << "The tree is empty." << std::endl;
+			return;
+		}
 
+		print("", node, false);
+	}
+};
+class Compare {
+public:
+    bool operator()(HuffTree<char>* a, HuffTree<char>* b)
+    {
+        if(a->weight() == b->weight()) {
+            if (a->root()->isLeaf() && b->root()->isLeaf()) {
+				LeafNode<char>* leafA = static_cast<LeafNode<char>*>(a->root());
+				LeafNode<char>* leafB = static_cast<LeafNode<char>*>(b->root());
+                return leafA->val() > leafB->val();
+            }
+			return a->Order() > b->Order();
+        }
+        // Defining priority on the basis of frequency
+        return a->weight() > b->weight();
+    }
+};
 // Build a Huffman tree from a collection of frequencies
 template <typename E> HuffTree<E>*
-buildHuff(HuffTree<E>** TreeArray, int count) {
-	heap<HuffTree<E>*>* forest = new heap<HuffTree<E>*>(TreeArray, count, count);
+buildHuff(priority_queue<HuffTree<E>*, vector<HuffTree<E>*>, Compare> TreeArray, int count) {
 	HuffTree<char> *temp1, *temp2, *temp3 = NULL;
-	while (forest->size() > 1) {
-		temp1 = forest->removefirst(); // Pull first two trees
-		temp2 = forest->removefirst(); // off the list
-		temp3 = new HuffTree<E>(temp1, temp2);
-		forest->insert(temp3); // Put the new tree back on list
-		delete temp1; // Must delete the remnants
-		delete temp2; // of the trees we created
-	}
-	return temp3;
+	while (TreeArray.size() != 1) {
+        // Node which has least frequency
+        HuffTree<char>* left = TreeArray.top();
+        // Remove node from Priority Queue
+        TreeArray.pop();
+
+        HuffTree<char>* right = TreeArray.top();
+        TreeArray.pop();
+
+        // A new node is formed with frequency left->freq + right->freq
+        // We take data as '$' because we are only concerned with the frequency
+        HuffTree<char>* node =new HuffTree<char>(left, right,++count);
+        // Push back node created to the Priority Queue
+        TreeArray.push(node);
+    }
+    return TreeArray.top();
+		
 }
 
 void LAPSE(string name)
@@ -318,19 +355,17 @@ for (const auto& entry : sortedEntries) {
 	cout << character << " " << frequency << endl;	
 }
     // Step 2: Create a vector of HuffTree<char>*
-    std::vector<HuffTree<char>*> treeArray;
+    priority_queue<HuffTree<char>*, vector<HuffTree<char>*>, Compare> treeArray;
     for (const auto& entry : sortedEntries) {
         char character = entry.first;
         int frequency = entry.second;
-        treeArray.push_back(new HuffTree<char>(character, frequency));
+        treeArray.push(new HuffTree<char>(character, frequency,0));
     }
 
-    // Step 4: Build a Huffman tree
-    HuffTree<char>* huffmanTree = buildHuff(treeArray.data(), treeArray.size());
+    // Step : Build a Huffman tree
+   HuffTree<char>* huffmanTree = buildHuff(treeArray, treeArray.size());
 	huffmanTree->printHuffmanTree(huffmanTree->root());
-    // Step 5: Return the Huffman tree
-    std::vector<HuffTree<char>*> result;
-    result.push_back(huffmanTree);
+    //result.push_back(huffmanTree);
 
     return;
 }

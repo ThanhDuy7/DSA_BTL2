@@ -144,13 +144,8 @@ public:
 };
 */
 // Heap class
-template <typename E>
-struct minTreeComp {
-    static bool prior(const E& a, const E& b) {
-        return a->weight() < b->weight();
-    }
-};
-template <typename E, typename Comp> class heap {
+
+template <typename E> class heap {
 private:
 	E* Heap; // Pointer to the heap array
 	int maxsize; // Maximum size of the heap
@@ -159,10 +154,10 @@ private:
 	void siftdown(int pos) {
 		while (!isLeaf(pos)) { // Stop if pos is a leaf
 			int j = leftchild(pos); int rc = rightchild(pos);
-			if ((rc < n) && Comp::prior(Heap[rc], Heap[j]))
+			if ((rc < n) && (Heap[rc] < Heap[j]))
 			j = rc; // Set j to greater child’s value
-			if (Comp::prior(Heap[pos], Heap[j])) return; // Done
-			std::swap(Heap[pos], Heap[j]);
+			if (Heap[pos] < Heap[j]) return; // Done
+			swap(Heap[pos], Heap[j]);
 			pos = j; // Move down
 		}
 	}
@@ -188,15 +183,15 @@ public:
 		Heap[curr] = it; // Start at end of heap
 		// Now sift up until curr’s parent > curr
 		while ((curr!=0) &&
-		(Comp::prior(Heap[curr], Heap[parent(curr)]))) {
-			std::swap(Heap[curr], Heap[parent(curr)]);
+		(Heap[curr] < Heap[parent(curr)])) {
+			swap(Heap[curr], Heap[parent(curr)]);
 			curr = parent(curr);
 		}
 	}
 // Remove first value
 	E removefirst() {
 		//Assert (n > 0, "Heap is empty");
-		std::swap(Heap[0], Heap[--n]); // std::swap first with last value
+		swap(Heap[0], Heap[--n]); // std::swap first with last value
 		if (n != 0) siftdown(0); // Siftdown new root val
 		return Heap[n]; // Return deleted value
 	}
@@ -207,8 +202,8 @@ public:
 		else {
 			std::swap(Heap[pos], Heap[--n]); // std::swap with last value
 			while ((pos != 0) &&
-			(Comp::prior(Heap[pos], Heap[parent(pos)]))) {
-				std::swap(Heap[pos], Heap[parent(pos)]); // Push up large key
+			(Heap[pos] < Heap[parent(pos)])) {
+				swap(Heap[pos], Heap[parent(pos)]); // Push up large key
 				pos = parent(pos);
 			}
 			if (n != 0) siftdown(pos); // Push down small key
@@ -268,12 +263,28 @@ public:
 	~HuffTree() {} // Destructor
 	HuffNode<E>* root() { return Root; } // Get root
 	int weight() { return Root->weight(); } // Root weight
+	void printHuffmanTree(HuffNode<E>* node, int indent = 0) {
+    if (node) {
+        if (!node->isLeaf()) {
+            printHuffmanTree(static_cast<IntlNode<E>*>(node)->left(), indent + 4);
+        }
+        std::cout << std::string(indent, ' ');
+        if (node->isLeaf()) {
+            std::cout << static_cast<LeafNode<E>*>(node)->val() << ":" << node->weight() << std::endl;
+        } else {
+            std::cout << "Internal:" << node->weight() << std::endl;
+        }
+        if (!node->isLeaf()) {
+            printHuffmanTree(static_cast<IntlNode<E>*>(node)->right(), indent + 4);
+        }
+    }
+}
 };
 
 // Build a Huffman tree from a collection of frequencies
 template <typename E> HuffTree<E>*
 buildHuff(HuffTree<E>** TreeArray, int count) {
-	heap<HuffTree<E>*, minTreeComp<E>>* forest = new heap<HuffTree<E>*, minTreeComp<E>>(TreeArray, count, count);
+	heap<HuffTree<E>*>* forest = new heap<HuffTree<E>*>(TreeArray, count, count);
 	HuffTree<char> *temp1, *temp2, *temp3 = NULL;
 	while (forest->size() > 1) {
 		temp1 = forest->removefirst(); // Pull first two trees
@@ -289,32 +300,34 @@ buildHuff(HuffTree<E>** TreeArray, int count) {
 void LAPSE(string name)
 {
 
-	std::map<char, int> frequencyMap;
+	map<char, int> frequencyMap;
     for (char c : name) {
         frequencyMap[c]++;
     }
-	for (const auto& entry : frequencyMap) {
-        std::cout << entry.first << ": " << entry.second << std::endl;
+	vector<pair<char, int>> sortedEntries(frequencyMap.begin(), frequencyMap.end());
+
+	sort(sortedEntries.begin(), sortedEntries.end(), [](const auto& a, const auto& b) {
+    if (a.second == b.second) {
+        return a.first < b.first; // Sort by character if frequencies are equal
     }
+    return a.second < b.second;
+});
+for (const auto& entry : sortedEntries) {
+	char character = entry.first;
+	int frequency = entry.second;
+	cout << character << " " << frequency << endl;	
+}
     // Step 2: Create a vector of HuffTree<char>*
     std::vector<HuffTree<char>*> treeArray;
-    for (const auto& entry : frequencyMap) {
+    for (const auto& entry : sortedEntries) {
         char character = entry.first;
         int frequency = entry.second;
         treeArray.push_back(new HuffTree<char>(character, frequency));
     }
 
-    // Step 3: Sort the vector based on frequency and character order
-    std::sort(treeArray.begin(), treeArray.end(), [](const auto& a, const auto& b) {
-        if (a->weight() == b->weight()) {
-            return a->root()->weight() < b->root()->weight();
-        }
-        return a->weight() < b->weight();
-    });
-
     // Step 4: Build a Huffman tree
     HuffTree<char>* huffmanTree = buildHuff(treeArray.data(), treeArray.size());
-
+	huffmanTree->printHuffmanTree(huffmanTree->root());
     // Step 5: Return the Huffman tree
     std::vector<HuffTree<char>*> result;
     result.push_back(huffmanTree);

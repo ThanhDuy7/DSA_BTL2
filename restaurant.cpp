@@ -227,16 +227,22 @@ public:
 	virtual ~HuffNode() {} // Base destructor
 	virtual int weight() = 0; // Return frequency
 	virtual bool isLeaf() = 0; // Determine type
+	virtual int Level() = 0;
+	virtual int Order() = 0;
 };
 template <typename E> // Leaf node subclass
 class LeafNode : public HuffNode<E> {
 private:
 	E it; // Value
 	int wgt; // Weight
+	int order;
+	int level;
 public:
-	LeafNode(const E& val, int freq) // Constructor
-	{ it = val; wgt = freq; }
+	LeafNode(const E& val, int freq, int order) // Constructor
+	{ it = val; wgt = freq; this->order = order; level = 0;}
 	int weight() { return wgt; }
+	int Level() { return level; }
+	int Order() { return order; }
 	E val() { return it; }
 	bool isLeaf() { return true; }
 };
@@ -246,10 +252,14 @@ private:
 	HuffNode<E>* lc; // Left child
 	HuffNode<E>* rc; // Right child
 	int wgt; // Subtree weight
+	int order;
+	int level;
 public:
-	IntlNode(HuffNode<E>* l, HuffNode<E>* r)
-	{ wgt = l->weight() + r->weight(); lc = l; rc = r; }
+	IntlNode(HuffNode<E>* l, HuffNode<E>* r, int order)
+	{ wgt = l->weight() + r->weight(); lc = l; rc = r; this->order = order; level = max(l->Level(), r->Level())+1;}
 	int weight() { return wgt; }
+	int Level() { return level; }
+	int Order() { return order; }
 	bool isLeaf() { return false; }
 	HuffNode<E>* left() const { return lc; }
 	void setLeft(HuffNode<E>* b)	{ lc = (HuffNode<E>*)b; }
@@ -261,30 +271,28 @@ public:
 template <typename E>
 class HuffTree {
 private:
-	HuffNode<E>* Root;
-	int order;
-	int level; // Tree root
+	HuffNode<E>* Root; // Tree root
 public:
 	HuffTree(E& val, int freq, int order) // Leaf constructor
-	{ Root = new LeafNode<E>(val, freq); this->order = order; this->level = 1;}
+	{ Root = new LeafNode<E>(val, freq, order); }
 	// Internal node constructor
 	HuffTree(HuffTree<E>* l, HuffTree<E>* r, int order)
-	{ Root = new IntlNode<E>(l->root(), r->root()); this->order = order;
-		this->level = max(l->level, r->level) + 1;}
+	{ Root = new IntlNode<E>(l->root(), r->root(), order);}
 	~HuffTree() {} // Destructor
 	HuffNode<E>* root() { return Root; } // Get root
 	int weight() { return Root->weight(); }
-	int Order() { return order;}// Root weight
+	int Order() { return Root->Order(); }// Root level
+	int Level() { return Root->Level(); }// Root order
 	void print(const std::string& prefix, HuffNode<E>* node, bool isLeft) {
     if (node != nullptr) {
-        std::cout << prefix << (isLeft ? "|-- " : "\\-- ") << node->weight();
+        std::cout << prefix << (isLeft ? "|------ " : "\\------ ") << node->weight()<< " "<<node->Level()<<" "<<node->Order();
 		if (node->isLeaf()) {
 			cout<<static_cast<LeafNode<E>*>(node)->val();
 		}
 		cout<<endl;
         if (!node->isLeaf()) {
-            print(prefix + (isLeft ? "|   " : "    "), static_cast<IntlNode<E>*>(node)->left(), true);
-            print(prefix + (isLeft ? "|   " : "    "), static_cast<IntlNode<E>*>(node)->right(), false);
+            print(prefix + (isLeft ? "|       " : "        "), static_cast<IntlNode<E>*>(node)->left(), true);
+            print(prefix + (isLeft ? "|       " : "        "), static_cast<IntlNode<E>*>(node)->right(), false);
         } 
     }
 }
@@ -328,6 +336,7 @@ buildHuff(priority_queue<HuffTree<E>*, vector<HuffTree<E>*>, Compare> TreeArray,
 
         // A new node is formed with frequency left->freq + right->freq
         // We take data as '$' because we are only concerned with the frequency
+		cout<<count<<endl;
         HuffTree<char>* node =new HuffTree<char>(left, right,++count);
         // Push back node created to the Priority Queue
         TreeArray.push(node);
@@ -383,7 +392,7 @@ for (const auto& entry : sortedEntries) {
     }
 
     // Step : Build a Huffman tree
-   HuffTree<char>* huffmanTree = buildHuff(treeArray, treeArray.size());
+   HuffTree<char>* huffmanTree = buildHuff(treeArray,0);
 	huffmanTree->printHuffmanTree(huffmanTree->root());
     //result.push_back(huffmanTree);
 

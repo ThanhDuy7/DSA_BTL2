@@ -262,13 +262,15 @@ template <typename E>
 class HuffTree {
 private:
 	HuffNode<E>* Root;
-	int order; // Tree root
+	int order;
+	int level; // Tree root
 public:
 	HuffTree(E& val, int freq, int order) // Leaf constructor
-	{ Root = new LeafNode<E>(val, freq); this->order = order;}
+	{ Root = new LeafNode<E>(val, freq); this->order = order; this->level = 1;}
 	// Internal node constructor
 	HuffTree(HuffTree<E>* l, HuffTree<E>* r, int order)
-	{ Root = new IntlNode<E>(l->root(), r->root()); this->order = order;}
+	{ Root = new IntlNode<E>(l->root(), r->root()); this->order = order;
+		this->level = max(l->level, r->level) + 1;}
 	~HuffTree() {} // Destructor
 	HuffNode<E>* root() { return Root; } // Get root
 	int weight() { return Root->weight(); }
@@ -343,6 +345,23 @@ void LAPSE(string name)
     }
 	vector<pair<char, int>> sortedEntries(frequencyMap.begin(), frequencyMap.end());
 
+	frequencyMap.clear();
+	for (auto& entry : sortedEntries) {
+        char character = entry.first;
+        int frequency = entry.second;
+		char encryptedChar;	
+        // Encrypt using Caesar cipher with step equal to frequency
+		if (character >= 'A' && character <= 'Z') {
+			encryptedChar = 'A' + (character - 'A' + frequency) % 26;
+		} else {
+			encryptedChar = 'a' + (character - 'a' + frequency) % 26;
+		}
+        entry.first = encryptedChar;
+
+        // Recount the frequency of the encrypted character
+        frequencyMap[encryptedChar]+=frequency;
+    }
+	sortedEntries.assign(frequencyMap.begin(), frequencyMap.end());
 	sort(sortedEntries.begin(), sortedEntries.end(), [](const auto& a, const auto& b) {
     if (a.second == b.second) {
         return a.first < b.first; // Sort by character if frequencies are equal
@@ -354,6 +373,7 @@ for (const auto& entry : sortedEntries) {
 	int frequency = entry.second;
 	cout << character << " " << frequency << endl;	
 }
+
     // Step 2: Create a vector of HuffTree<char>*
     priority_queue<HuffTree<char>*, vector<HuffTree<char>*>, Compare> treeArray;
     for (const auto& entry : sortedEntries) {

@@ -277,15 +277,54 @@ public:
 	{ Root = new LeafNode<E>(val, freq, order); }
 	// Internal node constructor
 	HuffTree(HuffTree<E>* l, HuffTree<E>* r, int order)
-	{ Root = new IntlNode<E>(l->root(), r->root(), order);}
+	{ 
+		Root = new IntlNode<E>(l->root(), r->root(), order);
+		rotateTree(this);
+	}
 	~HuffTree() {} // Destructor
 	HuffNode<E>* root() { return Root; } // Get root
 	int weight() { return Root->weight(); }
 	int Order() { return Root->Order(); }// Root level
 	int Level() { return Root->Level(); }// Root order
+	HuffNode<E>* rotateRight(HuffNode<E>* root) {
+		HuffNode<E>* temp = root->Left();
+		root->setLeft(temp->Right());
+		temp->setRight(root);
+		return temp;
+	}
+	HuffNode<E>* rotateLeft(HuffNode<E>* root) {
+		HuffNode<E>* temp = root->Right();
+		root->setRight(temp->Left());
+		temp->setLeft(root);
+		return temp;
+	}
+	void leftBalance(HuffNode<E>* &root) {
+		HuffNode<E>* left = root->Left();
+		int leftTreeBalance = left->Left()->Level() - left->Right()->Level();
+		if (leftTreeBalance >= 1) {
+			root = rotateRight(root);
+		} else {
+			root->setLeft(rotateLeft(left));
+			root = rotateRight(root);
+		}
+	}
+	void rotateTree(HuffTree<E> *&root, int &count = 0) {
+		if (count >= 3) return;
+		if (root->isLeaf())	return;
+		int balance = root->Left()->Level() - root->Right()->Level();
+		if (balance > 1) {
+			leftBalance(root);
+			count++;
+		} else if (balance < -1) {
+			rightBalance(root);
+			count++;
+		}
+		rotateTree(root->Left(), count);
+		rotateTree(root->Right(), count);
+	}
 	void print(const std::string& prefix, HuffNode<E>* node, bool isLeft) {
     if (node != nullptr) {
-        std::cout << prefix << (isLeft ? "|------ " : "\\------ ") << node->weight()<< " "<<node->Level()<<" "<<node->Order();
+        std::cout << prefix << (isLeft ? "|------ " : "\\------ ") << node->weight()<< " "<<node->Level();
 		if (node->isLeaf()) {
 			cout<<static_cast<LeafNode<E>*>(node)->val();
 		}

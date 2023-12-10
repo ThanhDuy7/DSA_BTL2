@@ -229,6 +229,11 @@ public:
 	virtual bool isLeaf() = 0; // Determine type
 	virtual int Level() = 0;
 	virtual int Order() = 0;
+	virtual void setLevel(int level) = 0;
+	virtual HuffNode<E>* left() = 0;
+	virtual HuffNode<E>* right() = 0;
+	virtual void setLeft(HuffNode<E>* b) = 0;
+	virtual void setRight(HuffNode<E>* b) = 0;
 };
 template <typename E> // Leaf node subclass
 class LeafNode : public HuffNode<E> {
@@ -242,9 +247,14 @@ public:
 	{ it = val; wgt = freq; this->order = order; level = 0;}
 	int weight() { return wgt; }
 	int Level() { return level; }
+	void setLevel(int level) { this->level = level; }
 	int Order() { return order; }
 	E val() { return it; }
 	bool isLeaf() { return true; }
+	HuffNode<E>* left() {return NULL;}
+	HuffNode<E>* right() {return NULL;}
+	void setLeft(HuffNode<E>* b) {}
+	void setRight(HuffNode<E>* b) {}
 };
 template <typename E> // Internal node subclass
 class IntlNode : public HuffNode<E> {
@@ -259,12 +269,14 @@ public:
 	{ wgt = l->weight() + r->weight(); lc = l; rc = r; this->order = order; level = max(l->Level(), r->Level())+1;}
 	int weight() { return wgt; }
 	int Level() { return level; }
+	void setLevel(int level) { this->level = level; }
 	int Order() { return order; }
 	bool isLeaf() { return false; }
-	HuffNode<E>* left() const { return lc; }
+	HuffNode<E>* left() { return lc; }
 	void setLeft(HuffNode<E>* b)	{ lc = (HuffNode<E>*)b; }
-	HuffNode<E>* right() const { return rc; }
+	HuffNode<E>* right() { return rc; }
 	void setRight(HuffNode<E>* b)	{ rc = (HuffNode<E>*)b; }
+	
 };
 // HuffTree is a template of two parameters: the element
 // type being coded and a comparator for two such elements.
@@ -279,59 +291,83 @@ public:
 	HuffTree(HuffTree<E>* l, HuffTree<E>* r, int order)
 	{ 
 		Root = new IntlNode<E>(l->root(), r->root(), order);
-		rotateTree(this);
+		int count = 0;
+		balanceTree(Root,count);
 	}
 	~HuffTree() {} // Destructor
 	HuffNode<E>* root() { return Root; } // Get root
 	int weight() { return Root->weight(); }
 	int Order() { return Root->Order(); }// Root level
 	int Level() { return Root->Level(); }// Root order
-	HuffNode<E>* rotateRight(HuffNode<E>* root) {
-		HuffNode<E>* temp = root->Left();
-		root->setLeft(temp->Right());
+	
+HuffNode<E>* rotateRight(HuffNode<E>* &root) {
+		HuffNode<E>* temp = root->left();
+		root->setLeft(temp->right());
 		temp->setRight(root);
+		root->setLevel(max(root->left()->Level(),root->right()->Level()) + 1);
+		temp->setLevel(max(temp->left()->Level(),root->Level()) + 1);
 		return temp;
 	}
-	HuffNode<E>* rotateLeft(HuffNode<E>* root) {
-		HuffNode<E>* temp = root->Right();
-		root->setRight(temp->Left());
+	HuffNode<E>* rotateLeft(HuffNode<E>* &root) {
+		HuffNode<E>* temp = root->right();
+		root->setRight(temp->left());
 		temp->setLeft(root);
+		root->setLevel(max(root->left()->Level(),root->right()->Level()) + 1);
+		temp->setLevel(max(temp->left()->Level(),root->Level()) + 1);
 		return temp;
 	}
-	void leftBalance(HuffNode<E>* &root) {
-		HuffNode<E>* left = root->Left();
-		int leftTreeBalance = left->Left()->Level() - left->Right()->Level();
-		if (leftTreeBalance >= 1) {
+	void balanceLeft(HuffNode<E>* &root) {
+		HuffNode<E>* left = root->left();
+		int leftBalance = left->left()->Level() - left->right()->Level();
+
+		if (leftBalance >= 0) {
 			root = rotateRight(root);
-		} else {
-			root->setLeft(rotateLeft(left));
+		} else if (leftBalance <= -1) {
+			left = rotateLeft(left);
 			root = rotateRight(root);
 		}
 	}
-	void rotateTree(HuffTree<E> *&root, int &count = 0) {
+	void balanceRight(HuffNode<E>* &root) {
+		HuffNode<E>* right = root->right();
+		int rightBalance = right->left()->Level() - right->right()->Level();
+
+		if (rightBalance <= -1) {
+			root = rotateLeft(root);
+		} else if (rightBalance >= 1) {
+			right = rotateRight(right);
+			root = rotateLeft(root);
+		}
+	}
+	void balanceTree(HuffNode<E>* &root, int& count) {
+		if (root->isLeaf()) {
+			return;
+		}
 		if (count >= 3) return;
-		if (root->isLeaf())	return;
-		int balance = root->Left()->Level() - root->Right()->Level();
-		if (balance > 1) {
-			leftBalance(root);
+		int balance = root->left()->Level() - root->right()->Level();
+
+		if (balance > 1) { // leftHigher
+			balanceLeft(root);
 			count++;
 		} else if (balance < -1) {
-			rightBalance(root);
+			balanceRight(root);
 			count++;
 		}
-		rotateTree(root->Left(), count);
-		rotateTree(root->Right(), count);
+		HuffNode<E>* left = root->left();
+		balanceTree(left,count);
+		HuffNode<E>* right = root->right();
+		balanceTree(right,count);
+		
 	}
 	void print(const std::string& prefix, HuffNode<E>* node, bool isLeft) {
     if (node != nullptr) {
-        std::cout << prefix << (isLeft ? "|------ " : "\\------ ") << node->weight()<< " "<<node->Level();
+        std::cout << prefix << (isLeft ? "|--- " : "\\--- ") << node->weight()<< " "<<node->Level();
 		if (node->isLeaf()) {
 			cout<<static_cast<LeafNode<E>*>(node)->val();
 		}
 		cout<<endl;
         if (!node->isLeaf()) {
-            print(prefix + (isLeft ? "|       " : "        "), static_cast<IntlNode<E>*>(node)->left(), true);
-            print(prefix + (isLeft ? "|       " : "        "), static_cast<IntlNode<E>*>(node)->right(), false);
+            print(prefix + (isLeft ? "|     " : "      "), static_cast<IntlNode<E>*>(node)->left(), true);
+            print(prefix + (isLeft ? "|     " : "      "), static_cast<IntlNode<E>*>(node)->right(), false);
         } 
     }
 }

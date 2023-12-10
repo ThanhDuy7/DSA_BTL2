@@ -412,19 +412,12 @@ public:
 template <typename E> HuffTree<E>*
 buildHuff(priority_queue<HuffTree<E>*, vector<HuffTree<E>*>, Compare> TreeArray, int count) {
 	while (TreeArray.size() != 1) {
-        // Node which has least frequency
         HuffTree<char>* left = TreeArray.top();
-        // Remove node from Priority Queue
         TreeArray.pop();
 
         HuffTree<char>* right = TreeArray.top();
         TreeArray.pop();
-
-        // A new node is formed with frequency left->freq + right->freq
-        // We take data as '$' because we are only concerned with the frequency
-		cout<<count<<endl;
         HuffTree<char>* node =new HuffTree<char>(left, right,++count);
-        // Push back node created to the Priority Queue
         TreeArray.push(node);
     }
     return TreeArray.top();
@@ -466,7 +459,6 @@ void LAPSE(string name)
             c = (c - base + frequencyMap[c]) % 26 + base;
         }
     }
-	cout<<encryptedName<<endl;
 
 	vector<pair<char, int>> sortedEntries(frequencyMap.begin(), frequencyMap.end());
 	
@@ -475,15 +467,12 @@ void LAPSE(string name)
         char character = entry.first;
         int frequency = entry.second;
 		char encryptedChar;	
-        // Encrypt using Caesar cipher with step equal to frequency
 		if (character >= 'A' && character <= 'Z') {
 			encryptedChar = 'A' + (character - 'A' + frequency) % 26;
 		} else {
 			encryptedChar = 'a' + (character - 'a' + frequency) % 26;
 		}
         entry.first = encryptedChar;
-
-        // Recount the frequency of the encrypted character
         frequencyMap[encryptedChar]+=frequency;
     }
 	sortedEntries.assign(frequencyMap.begin(), frequencyMap.end());
@@ -493,12 +482,6 @@ void LAPSE(string name)
     }
     return a.second < b.second;
 });
-for (const auto& entry : sortedEntries) {
-	char character = entry.first;
-	int frequency = entry.second;
-	cout << character << " " << frequency << endl;	
-}
-
     // Step 2: Create a vector of HuffTree<char>*
     priority_queue<HuffTree<char>*, vector<HuffTree<char>*>, Compare> treeArray;
     for (const auto& entry : sortedEntries) {
@@ -507,31 +490,23 @@ for (const auto& entry : sortedEntries) {
         treeArray.push(new HuffTree<char>(character, frequency,0));
     }
     // Step : Build a Huffman tree
-   HuffTree<char>* huffmanTree = buildHuff(treeArray,0);
-   treeArray.pop();
+	HuffTree<char>* huffmanTree = buildHuff(treeArray,0);
+	treeArray.pop();
 	huffmanTree->printHuffmanTree(huffmanTree->root());
 	int result;
+
 	if (huffmanTree->root()->isLeaf()) {
 		result = 0;
 	} else {
 		unordered_map<char, string> huffCodes;
     	buildHuffCodes(huffmanTree->root(), "", huffCodes);
-
-
-	for (const auto& entry : huffCodes) {
-		char character = entry.first;
-		string code = entry.second;
-		cout << character << " " << code << endl;	
-	}
     	string s = encryptString(encryptedName, huffCodes);
-		cout << "Encrypted String: " << s << endl;
 		string str = "";
 		int n = s.size();
 		for (int i = n - 1; i > n - 11; i--) {
 			if (i < 0) break;
 			str +=	s[i];
 		}
-		cout<<str<<endl;
 		bitset<64> bits(str);
 		result = bits.to_ulong();
 		cout<<result<<endl;

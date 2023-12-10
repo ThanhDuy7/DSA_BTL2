@@ -420,15 +420,45 @@ buildHuff(priority_queue<HuffTree<E>*, vector<HuffTree<E>*>, Compare> TreeArray,
 		
 }
 
+
+void buildHuffCodes(HuffNode<char>* root, string code, unordered_map<char, string>& huffCodes) {
+    if (root->isLeaf()) {
+        huffCodes[static_cast<LeafNode<char>*>(root)->val()] = code;
+        return;
+    }
+
+    buildHuffCodes(root->left(), code + "0", huffCodes);
+    buildHuffCodes(root->right(), code + "1", huffCodes);
+}
+
+// Function to encrypt a string using Huffman codes
+string encryptString(const string& input, const unordered_map<char, string>& huffCodes) {
+    string result;
+    for (char ch : input) {
+		if (huffCodes.count(ch) > 0) {
+    	result += huffCodes.at(ch);
+        }
+    }
+    return result;
+}
 void LAPSE(string name)
 {
-
+	if (name.size() <= 3) return;
 	map<char, int> frequencyMap;
     for (char c : name) {
         frequencyMap[c]++;
     }
-	vector<pair<char, int>> sortedEntries(frequencyMap.begin(), frequencyMap.end());
+	string encryptedName = name;
+    for (char& c : encryptedName) {
+        if (isalpha(c)) {
+            char base = isupper(c) ? 'A' : 'a';
+            c = (c - base + frequencyMap[c]) % 26 + base;
+        }
+    }
+	cout<<encryptedName<<endl;
 
+	vector<pair<char, int>> sortedEntries(frequencyMap.begin(), frequencyMap.end());
+	
 	frequencyMap.clear();
 	for (auto& entry : sortedEntries) {
         char character = entry.first;
@@ -469,7 +499,29 @@ for (const auto& entry : sortedEntries) {
     // Step : Build a Huffman tree
    HuffTree<char>* huffmanTree = buildHuff(treeArray,0);
 	huffmanTree->printHuffmanTree(huffmanTree->root());
-    //result.push_back(huffmanTree);
+	int result;
+	if (huffmanTree->root()->isLeaf()) {
+		result = 0;
+	} else {
+		unordered_map<char, string> huffCodes;
+    	buildHuffCodes(huffmanTree->root(), "", huffCodes);
+
+	for (const auto& entry : huffCodes) {
+		char character = entry.first;
+		string code = entry.second;
+		cout << character << " " << code << endl;	
+}
+    	string s = encryptString(encryptedName, huffCodes);
+		cout << "Encrypted String: " << s << std::endl;
+		string str = "";
+		for (unsigned int i = s.size()-1; i > s.size() - 11; i--) {
+			str +=	s[i];
+		}
+		cout<<str<<endl;
+		bitset<64> bits(str);
+		result = bits.to_ulong();
+		cout<<result<<endl;
+	}
 
     return;
 }

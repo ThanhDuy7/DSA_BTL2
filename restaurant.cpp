@@ -294,12 +294,23 @@ public:
 		int count = 0;
 		balanceTree(Root,count);
 	}
-	~HuffTree() {} // Destructor
+	~HuffTree() {
+		deleteTree(Root);
+		Root = NULL;
+	} // Destructor
 	HuffNode<E>* root() { return Root; } // Get root
 	int weight() { return Root->weight(); }
 	int Order() { return Root->Order(); }// Root level
 	int Level() { return Root->Level(); }// Root order
-	
+	void deleteTree(HuffNode<E>* node) {
+		if (node->isLeaf()) {
+			delete node;
+			return;
+		}
+		deleteTree(node->left());
+		deleteTree(node->right());
+		delete node;
+	}
 HuffNode<E>* rotateRight(HuffNode<E>* &root) {
 		HuffNode<E>* temp = root->left();
 		root->setLeft(temp->right());
@@ -382,7 +393,8 @@ HuffNode<E>* rotateRight(HuffNode<E>* &root) {
 };
 class Compare {
 public:
-    bool operator()(HuffTree<char>* a, HuffTree<char>* b)
+    bool operator()(HuffTree<char>* &a, HuffTree<char>* 
+	&b)
     {
         if(a->weight() == b->weight()) {
             if (a->root()->isLeaf() && b->root()->isLeaf()) {
@@ -399,7 +411,6 @@ public:
 // Build a Huffman tree from a collection of frequencies
 template <typename E> HuffTree<E>*
 buildHuff(priority_queue<HuffTree<E>*, vector<HuffTree<E>*>, Compare> TreeArray, int count) {
-	HuffTree<char> *temp1, *temp2, *temp3 = NULL;
 	while (TreeArray.size() != 1) {
         // Node which has least frequency
         HuffTree<char>* left = TreeArray.top();
@@ -495,9 +506,9 @@ for (const auto& entry : sortedEntries) {
         int frequency = entry.second;
         treeArray.push(new HuffTree<char>(character, frequency,0));
     }
-
     // Step : Build a Huffman tree
    HuffTree<char>* huffmanTree = buildHuff(treeArray,0);
+   treeArray.pop();
 	huffmanTree->printHuffmanTree(huffmanTree->root());
 	int result;
 	if (huffmanTree->root()->isLeaf()) {
@@ -506,15 +517,18 @@ for (const auto& entry : sortedEntries) {
 		unordered_map<char, string> huffCodes;
     	buildHuffCodes(huffmanTree->root(), "", huffCodes);
 
+
 	for (const auto& entry : huffCodes) {
 		char character = entry.first;
 		string code = entry.second;
 		cout << character << " " << code << endl;	
-}
+	}
     	string s = encryptString(encryptedName, huffCodes);
-		cout << "Encrypted String: " << s << std::endl;
+		cout << "Encrypted String: " << s << endl;
 		string str = "";
-		for (unsigned int i = s.size()-1; i > s.size() - 11; i--) {
+		int n = s.size();
+		for (int i = n - 1; i > n - 11; i--) {
+			if (i < 0) break;
 			str +=	s[i];
 		}
 		cout<<str<<endl;
@@ -522,7 +536,8 @@ for (const auto& entry : sortedEntries) {
 		result = bits.to_ulong();
 		cout<<result<<endl;
 	}
-
+	delete huffmanTree;
+	huffmanTree = NULL;
     return;
 }
 void simulate(string filename)

@@ -2,23 +2,6 @@
 
 int MAXSIZE = 0;
 /*
-enum BalanceValue
-{
-    LH = -1,
-    EH = 0,
-    RH = 1
-};
-
-void printNSpace(int n)
-{
-    for (int i = 0; i < n - 1; i++)
-        cout << " ";
-}
-
-void printInteger(int &n)
-{
-    cout << n << " ";
-}
 template <class T>
 class AVLtree
 {
@@ -26,67 +9,12 @@ public:
 	class Node;
 private:
 	Node* root;
-protected:
-	int getHeightRec(Node* node) {
-		if (node == NULL) return 0;
-		return node->height;
-		int lh = this->getHeightRec(node->pLeft);
-        int rh = this->getHeightRec(node->pRight);
-        return (lh > rh ? lh : rh) + 1;
-	}
 public:
 	AVLtree(): root(NULL) {}
 	~AVLtree(){}
 	int getHeight() {
 		return this->getHeightRec(this->root);
 	}
-	void printTreeStructure()
-    {
-        int height = this->getHeight();
-        if (this->root == NULL)
-        {
-            cout << "NULL\n";
-            return;
-        }
-        queue<Node *> q;
-        q.push(root);
-        Node *temp;
-        int count = 0;
-        int maxNode = 1;
-        int level = 0;
-        int space = pow(2, height);
-        printNSpace(space / 2);
-        while (!q.empty())
-        {
-            temp = q.front();
-            q.pop();
-            if (temp == NULL)
-            {
-                cout << " ";
-                q.push(NULL);
-                q.push(NULL);
-            }
-            else
-            {
-                cout << temp->data;
-                q.push(temp->pLeft);
-                q.push(temp->pRight);
-            }
-            printNSpace(space);
-            count++;
-            if (count == maxNode)
-            {
-                cout << endl;
-                count = 0;
-                maxNode *= 2;
-                level++;
-                space /= 2;
-                printNSpace(space / 2);
-            }
-            if (level == height)
-                return;
-        }
-    }
 
 	void AVLdelete(Node* &root,const T &value, bool &shorter) {
 		if (root == NULL) {
@@ -222,7 +150,7 @@ public:
 
 
 // Huffman tree node abstract base class
-template <typename E> class HuffNode {
+class HuffNode {
 public:
 	virtual ~HuffNode() {} // Base destructor
 	virtual int weight() = 0; // Return frequency
@@ -230,105 +158,96 @@ public:
 	virtual int Level() = 0;
 	virtual int Order() = 0;
 	virtual void setLevel(int level) = 0;
-	virtual HuffNode<E>* left() = 0;
-	virtual HuffNode<E>* right() = 0;
-	virtual void setLeft(HuffNode<E>* b) = 0;
-	virtual void setRight(HuffNode<E>* b) = 0;
+	virtual HuffNode* left() = 0;
+	virtual HuffNode* right() = 0;
+	virtual void setLeft(HuffNode* b) = 0;
+	virtual void setRight(HuffNode* b) = 0;
 };
-template <typename E> // Leaf node subclass
-class LeafNode : public HuffNode<E> {
+// Leaf node subclass
+class LeafNode : public HuffNode {
 private:
-	E it; // Value
+	char it; // Value
 	int wgt; // Weight
 	int order;
 	int level;
 public:
-	LeafNode(const E& val, int freq, int order) // Constructor
+	LeafNode(const char& val, int freq, int order) // Constructor
 	{ it = val; wgt = freq; this->order = order; level = 0;}
 	int weight() { return wgt; }
 	int Level() { return level; }
 	void setLevel(int level) { this->level = level; }
 	int Order() { return order; }
-	E val() { return it; }
+	char val() { return it; }
 	bool isLeaf() { return true; }
-	HuffNode<E>* left() {return NULL;}
-	HuffNode<E>* right() {return NULL;}
-	void setLeft(HuffNode<E>* b) {}
-	void setRight(HuffNode<E>* b) {}
+	HuffNode* left() {return NULL;}
+	HuffNode* right() {return NULL;}
+	void setLeft(HuffNode* b) {}
+	void setRight(HuffNode* b) {}
 };
-template <typename E> // Internal node subclass
-class IntlNode : public HuffNode<E> {
+// Internal node subclass
+class IntlNode : public HuffNode {
 private:
-	HuffNode<E>* lc; // Left child
-	HuffNode<E>* rc; // Right child
+	HuffNode* lc; // Left child
+	HuffNode* rc; // Right child
 	int wgt; // Subtree weight
 	int order;
 	int level;
 public:
-	IntlNode(HuffNode<E>* l, HuffNode<E>* r, int order)
+	IntlNode(HuffNode* &l, HuffNode* &r, int order)
 	{ wgt = l->weight() + r->weight(); lc = l; rc = r; this->order = order; level = max(l->Level(), r->Level())+1;}
 	int weight() { return wgt; }
 	int Level() { return level; }
 	void setLevel(int level) { this->level = level; }
 	int Order() { return order; }
 	bool isLeaf() { return false; }
-	HuffNode<E>* left() { return lc; }
-	void setLeft(HuffNode<E>* b)	{ lc = (HuffNode<E>*)b; }
-	HuffNode<E>* right() { return rc; }
-	void setRight(HuffNode<E>* b)	{ rc = (HuffNode<E>*)b; }
+	HuffNode* left() { return lc; }
+	void setLeft(HuffNode* b)	{ lc = (HuffNode*)b; }
+	HuffNode* right() { return rc; }
+	void setRight(HuffNode* b)	{ rc = (HuffNode*)b; }
 	
 };
 // HuffTree is a template of two parameters: the element
 // type being coded and a comparator for two such elements.
-template <typename E>
 class HuffTree {
 private:
-	HuffNode<E>* Root; // Tree root
+	HuffNode* Root; // Tree root
 public:
-	HuffTree(E& val, int freq, int order) // Leaf constructor
-	{ Root = new LeafNode<E>(val, freq, order); }
+	HuffTree(char& val, int freq, int order) // Leaf constructor
+	{ Root = new LeafNode(val, freq, order); }
 	// Internal node constructor
-	HuffTree(HuffTree<E>* l, HuffTree<E>* r, int order)
+	HuffTree(HuffTree* &l, HuffTree* &r, int order)
 	{ 
-		Root = new IntlNode<E>(l->root(), r->root(), order);
+		HuffNode* left = l->root();
+		HuffNode* right = r->root();
+		Root = new IntlNode(left, right, order);
 		int count = 0;
-		balanceTree(Root,count);
+		//balanceTree(Root,count);
 	}
 	~HuffTree() {
-		deleteTree(Root);
-		Root = NULL;
-	} // Destructor
-	HuffNode<E>* root() { return Root; } // Get root
+	}
+	HuffNode* root() { return Root; } // Get root
 	int weight() { return Root->weight(); }
 	int Order() { return Root->Order(); }// Root level
 	int Level() { return Root->Level(); }// Root order
-	void deleteTree(HuffNode<E>* node) {
-		if (node->isLeaf()) {
-			delete node;
-			return;
-		}
-		deleteTree(node->left());
-		deleteTree(node->right());
-		delete node;
-	}
-HuffNode<E>* rotateRight(HuffNode<E>* &root) {
-		HuffNode<E>* temp = root->left();
+	
+HuffNode* rotateRight(HuffNode* &root) {
+		HuffNode* temp = root->left();
 		root->setLeft(temp->right());
 		temp->setRight(root);
 		root->setLevel(max(root->left()->Level(),root->right()->Level()) + 1);
 		temp->setLevel(max(temp->left()->Level(),root->Level()) + 1);
 		return temp;
 	}
-	HuffNode<E>* rotateLeft(HuffNode<E>* &root) {
-		HuffNode<E>* temp = root->right();
+	HuffNode* rotateLeft(HuffNode* &root) {
+		HuffNode* temp = root->right();
 		root->setRight(temp->left());
 		temp->setLeft(root);
 		root->setLevel(max(root->left()->Level(),root->right()->Level()) + 1);
 		temp->setLevel(max(temp->left()->Level(),root->Level()) + 1);
 		return temp;
 	}
-	void balanceLeft(HuffNode<E>* &root) {
-		HuffNode<E>* left = root->left();
+	void balanceLeft(HuffNode* &root) {
+		HuffNode* left = root->left();
 		int leftBalance = left->left()->Level() - left->right()->Level();
 
 		if (leftBalance >= 0) {
@@ -338,8 +257,8 @@ HuffNode<E>* rotateRight(HuffNode<E>* &root) {
 			root = rotateRight(root);
 		}
 	}
-	void balanceRight(HuffNode<E>* &root) {
-		HuffNode<E>* right = root->right();
+	void balanceRight(HuffNode* &root) {
+		HuffNode* right = root->right();
 		int rightBalance = right->left()->Level() - right->right()->Level();
 
 		if (rightBalance <= -1) {
@@ -349,7 +268,7 @@ HuffNode<E>* rotateRight(HuffNode<E>* &root) {
 			root = rotateLeft(root);
 		}
 	}
-	void balanceTree(HuffNode<E>* &root, int& count) {
+	void balanceTree(HuffNode* &root, int& count) {
 		if (root->isLeaf()) {
 			return;
 		}
@@ -363,26 +282,25 @@ HuffNode<E>* rotateRight(HuffNode<E>* &root) {
 			balanceRight(root);
 			count++;
 		}
-		HuffNode<E>* left = root->left();
+		HuffNode* left = root->left();
 		balanceTree(left,count);
-		HuffNode<E>* right = root->right();
+		HuffNode* right = root->right();
 		balanceTree(right,count);
-		
 	}
-	void print(const std::string& prefix, HuffNode<E>* node, bool isLeft) {
+	void print(const std::string& prefix, HuffNode* node, bool isLeft) {
     if (node != nullptr) {
         std::cout << prefix << (isLeft ? "|--- " : "\\--- ") << node->weight()<< " "<<node->Level();
 		if (node->isLeaf()) {
-			cout<<static_cast<LeafNode<E>*>(node)->val();
+			cout<<static_cast<LeafNode*>(node)->val();
 		}
 		cout<<endl;
         if (!node->isLeaf()) {
-            print(prefix + (isLeft ? "|     " : "      "), static_cast<IntlNode<E>*>(node)->left(), true);
-            print(prefix + (isLeft ? "|     " : "      "), static_cast<IntlNode<E>*>(node)->right(), false);
+            print(prefix + (isLeft ? "|     " : "      "), static_cast<IntlNode*>(node)->left(), true);
+            print(prefix + (isLeft ? "|     " : "      "), static_cast<IntlNode*>(node)->right(), false);
         } 
     }
 }
-	void printHuffmanTree(HuffNode<E>* node) {
+	void printHuffmanTree(HuffNode* node) {
 		if (!node) {
 			std::cout << "The tree is empty." << std::endl;
 			return;
@@ -393,13 +311,12 @@ HuffNode<E>* rotateRight(HuffNode<E>* &root) {
 };
 class Compare {
 public:
-    bool operator()(HuffTree<char>* &a, HuffTree<char>* 
-	&b)
+    bool operator()(HuffTree* a, HuffTree* b)
     {
         if(a->weight() == b->weight()) {
             if (a->root()->isLeaf() && b->root()->isLeaf()) {
-				LeafNode<char>* leafA = static_cast<LeafNode<char>*>(a->root());
-				LeafNode<char>* leafB = static_cast<LeafNode<char>*>(b->root());
+				LeafNode* leafA = static_cast<LeafNode*>(a->root());
+				LeafNode* leafB = static_cast<LeafNode*>(b->root());
                 return leafA->val() > leafB->val();
             }
 			return a->Order() > b->Order();
@@ -408,26 +325,10 @@ public:
         return a->weight() > b->weight();
     }
 };
-// Build a Huffman tree from a collection of frequencies
-template <typename E> HuffTree<E>*
-buildHuff(priority_queue<HuffTree<E>*, vector<HuffTree<E>*>, Compare> TreeArray, int count) {
-	while (TreeArray.size() != 1) {
-        HuffTree<char>* left = TreeArray.top();
-        TreeArray.pop();
 
-        HuffTree<char>* right = TreeArray.top();
-        TreeArray.pop();
-        HuffTree<char>* node =new HuffTree<char>(left, right,++count);
-        TreeArray.push(node);
-    }
-    return TreeArray.top();
-		
-}
-
-
-void buildHuffCodes(HuffNode<char>* root, string code, unordered_map<char, string>& huffCodes) {
+void buildHuffCodes(HuffNode* root, string code, unordered_map<char, string>& huffCodes) {
     if (root->isLeaf()) {
-        huffCodes[static_cast<LeafNode<char>*>(root)->val()] = code;
+        huffCodes[static_cast<LeafNode*>(root)->val()] = code;
         return;
     }
 
@@ -445,12 +346,40 @@ string encryptString(const string& input, const unordered_map<char, string>& huf
     }
     return result;
 }
+
+void deleteRoot(HuffNode* &root) {
+	if (!root) {
+		return;
+	}
+	if (root->isLeaf()) {
+		delete root;
+		root = NULL;
+		return;
+	}
+	HuffNode* left = root->left();
+	HuffNode* right = root->right();
+	deleteRoot(left);
+	deleteRoot(right);
+	delete root;
+	root = NULL;
+}
+void deleteTree(HuffTree* &tree) {
+	if (!tree) {
+		return;
+	}
+	HuffNode* root = tree->root();
+	deleteRoot(root);
+	delete tree;
+}
 void LAPSE(string name)
 {
-	if (name.size() <= 3) return;
 	map<char, int> frequencyMap;
     for (char c : name) {
         frequencyMap[c]++;
+    }
+	if (frequencyMap.size() < 3) {
+        // Less than 3 different characters
+        return;
     }
 	string encryptedName = name;
     for (char& c : encryptedName) {
@@ -483,18 +412,34 @@ void LAPSE(string name)
     return a.second < b.second;
 });
     // Step 2: Create a vector of HuffTree<char>*
-    priority_queue<HuffTree<char>*, vector<HuffTree<char>*>, Compare> treeArray;
+    priority_queue<HuffTree*, vector<HuffTree*>, Compare> treeArray;
     for (const auto& entry : sortedEntries) {
         char character = entry.first;
         int frequency = entry.second;
-        treeArray.push(new HuffTree<char>(character, frequency,0));
+		HuffTree* manTree = new HuffTree(character, frequency,0);
+        treeArray.push(manTree);
     }
-    // Step : Build a Huffman tree
-	HuffTree<char>* huffmanTree = buildHuff(treeArray,0);
-	treeArray.pop();
-	huffmanTree->printHuffmanTree(huffmanTree->root());
-	int result;
+	int count = 0;
+	
+	while (treeArray.size() > 1) {
+        HuffTree* left = treeArray.top();
+        treeArray.pop();
 
+        HuffTree* right = treeArray.top();
+        treeArray.pop();
+        HuffTree* node =new HuffTree(left, right,++count);
+        treeArray.push(node);
+		delete left;
+		delete right;
+    }
+	HuffTree* huffmanTree = treeArray.top();
+	treeArray.pop();
+	deleteTree(huffmanTree);
+	return;
+
+	// huffmanTree->printHuffmanTree(huffmanTree->root());
+	int result;
+	/*
 	if (huffmanTree->root()->isLeaf()) {
 		result = 0;
 	} else {
@@ -511,14 +456,18 @@ void LAPSE(string name)
 		result = bits.to_ulong();
 		cout<<result<<endl;
 	}
-	delete huffmanTree;
-	huffmanTree = NULL;
+	*/
+	//
+	
+	//deleteTree(huffmanTree->root());
+	// huffmanTree = NULL;
     return;
 }
 void simulate(string filename)
 {
 	ifstream ss(filename);
 	string str, maxsize, name, num;
+	//HuffTree<char>* enter = NULL;
 	while(ss >> str)
 	{ 
 		if(str == "MAXSIZE")
@@ -526,7 +475,7 @@ void simulate(string filename)
 			ss >> maxsize;
 			MAXSIZE = stoi(maxsize); 
     	}
-        else if(str == "LAPSE") // RED <NAME> <ENERGY>
+        else if(str == "LAPSE") 
         {
             ss >> name;
 			cout<<"LAPSE"<<" "<<name<<endl;
@@ -551,5 +500,6 @@ void simulate(string filename)
 			//CLEAVE(stoi(num));
 		}
 	}
+	//delete enter;
 	return;
 }

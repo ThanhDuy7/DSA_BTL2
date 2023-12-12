@@ -156,7 +156,10 @@ private:
 public:
 	BSTree() : root(nullptr), count(0) {}
     ~BSTree() {}
-	int size() {
+	Node* getRoot() const {
+		return root;
+	}
+	int sizeOf() {
 		return count;
 	}
 	void insert(const int &data,Node* root) {
@@ -428,9 +431,9 @@ void deleteTree(HuffTree* &tree) {
 }
 
 
-void chooseRes(int result, vector<BSTree> &gojo){
+void chooseRes(int result, unordered_map<int,BSTree> &gojo){
 	int ID = result % MAXSIZE + 1;
-	i*
+	gojo[ID].add(result);
 }
 
 
@@ -528,7 +531,7 @@ void simulate(string filename)
 	string str, maxsize, name, num;
 	int result = 0;
 	HuffTree* huffmanTree = NULL;
-	vector<BSTree> gojo(MAXSIZE);
+	unordered_map<int,BSTree> gojo;
 	while(ss >> str)
 	{ 
 		if(str == "MAXSIZE")

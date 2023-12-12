@@ -221,7 +221,7 @@ public:
 		HuffNode* right = r->root();
 		Root = new IntlNode(left, right, order);
 		int count = 0;
-		//balanceTree(Root,count);
+		balanceTree(Root,count);
 	}
 	~HuffTree() {
 	}
@@ -308,6 +308,17 @@ HuffNode* rotateRight(HuffNode* &root) {
 
 		print("", node, false);
 	}
+	void printPostOrder(HuffNode* node) {
+		if (!node) {
+			return;
+		}
+		printPostOrder(node->left());
+		printPostOrder(node->right());
+		if (node->isLeaf()) {
+			cout<<static_cast<LeafNode*>(node)->val()<<endl;
+		} else
+		cout<<node->weight()<<endl;
+	}
 };
 class Compare {
 public:
@@ -317,7 +328,11 @@ public:
             if (a->root()->isLeaf() && b->root()->isLeaf()) {
 				LeafNode* leafA = static_cast<LeafNode*>(a->root());
 				LeafNode* leafB = static_cast<LeafNode*>(b->root());
-                return leafA->val() > leafB->val();
+				if (leafA->val() >= 'A' && leafA->val() <= 'Z' && leafB->val() >= 'a' && leafB->val() <= 'z') {
+					return true;
+				} else if (leafA->val() >= 'a' && leafA->val() <= 'z' && leafB->val() >= 'A' && leafB->val() <= 'Z') {
+					return false;
+				}else	return leafA->val() > leafB->val();
             }
 			return a->Order() > b->Order();
         }
@@ -371,7 +386,7 @@ void deleteTree(HuffTree* &tree) {
 	deleteRoot(root);
 	delete tree;
 }
-void LAPSE(string name)
+void LAPSE(HuffTree* &huffmanTree, string name)
 {
 	map<char, int> frequencyMap;
     for (char c : name) {
@@ -405,12 +420,6 @@ void LAPSE(string name)
         frequencyMap[encryptedChar]+=frequency;
     }
 	sortedEntries.assign(frequencyMap.begin(), frequencyMap.end());
-	sort(sortedEntries.begin(), sortedEntries.end(), [](const auto& a, const auto& b) {
-    if (a.second == b.second) {
-        return a.first < b.first; // Sort by character if frequencies are equal
-    }
-    return a.second < b.second;
-});
     // Step 2: Create a vector of HuffTree<char>*
     priority_queue<HuffTree*, vector<HuffTree*>, Compare> treeArray;
     for (const auto& entry : sortedEntries) {
@@ -419,6 +428,13 @@ void LAPSE(string name)
 		HuffTree* manTree = new HuffTree(character, frequency,0);
         treeArray.push(manTree);
     }
+	priority_queue<HuffTree*, vector<HuffTree*>, Compare> copyTreeArray = treeArray;
+for (int i = 0; i < treeArray.size(); i++) {
+		HuffTree* tree = copyTreeArray.top();
+		copyTreeArray.pop();
+		LeafNode* leafA = static_cast<LeafNode*>(tree->root());
+		cout<<leafA->val()<<" "<<leafA->weight()<<endl;
+	}
 	int count = 0;
 	
 	while (treeArray.size() > 1) {
@@ -432,14 +448,13 @@ void LAPSE(string name)
 		delete left;
 		delete right;
     }
-	HuffTree* huffmanTree = treeArray.top();
+	huffmanTree = treeArray.top();
 	treeArray.pop();
-	deleteTree(huffmanTree);
-	return;
+	
 
-	// huffmanTree->printHuffmanTree(huffmanTree->root());
+	//huffmanTree->printHuffmanTree(huffmanTree->root());
 	int result;
-	/*
+	
 	if (huffmanTree->root()->isLeaf()) {
 		result = 0;
 	} else {
@@ -456,18 +471,13 @@ void LAPSE(string name)
 		result = bits.to_ulong();
 		cout<<result<<endl;
 	}
-	*/
-	//
-	
-	//deleteTree(huffmanTree->root());
-	// huffmanTree = NULL;
-    return;
+	return;
 }
 void simulate(string filename)
 {
 	ifstream ss(filename);
 	string str, maxsize, name, num;
-	//HuffTree<char>* enter = NULL;
+	HuffTree* huffmanTree = NULL;
 	while(ss >> str)
 	{ 
 		if(str == "MAXSIZE")
@@ -479,7 +489,7 @@ void simulate(string filename)
         {
             ss >> name;
 			cout<<"LAPSE"<<" "<<name<<endl;
-			LAPSE(name);
+			LAPSE(huffmanTree,name);
     	} else if (str == "KOKUSEN") {
 			cout<<"KOKUSEN"<<endl;
 			//KOKUSEN();
@@ -489,6 +499,8 @@ void simulate(string filename)
 			//KEITEIKEN(stoi(num));
 		} else if (str == "HAND") {
 			cout<<"HAND"<<endl;
+			huffmanTree->printHuffmanTree(huffmanTree->root());
+			huffmanTree->printPostOrder(huffmanTree->root());
 			//HAND();
 		} else if (str == "LIMITLESS") {
 			ss >> num;

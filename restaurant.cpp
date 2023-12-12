@@ -159,10 +159,13 @@ public:
 	Node* getRoot() const {
 		return root;
 	}
+	int getData() const {
+		return root->data;
+	}
 	int sizeOf() {
 		return count;
 	}
-	void insert(const int &data,Node* root) {
+	void insert(const int &data,Node* &root) {
 		if (root == NULL) {
 			Node* temp = new Node(data);
 			root = temp;
@@ -431,11 +434,19 @@ void deleteTree(HuffTree* &tree) {
 }
 
 
-void chooseRes(int result, unordered_map<int,BSTree> &gojo){
-	int ID = result % MAXSIZE + 1;
-	gojo[ID].add(result);
-}
 
+void KOKUSEN(unordered_map<int,BSTree> &gojo){
+
+	for (auto& entry : gojo) {
+		int ID = entry.first;
+		BSTree tree = entry.second;
+		if (tree.sizeOf() == 0) {
+			cout<<ID<<" "<<"0"<<endl;
+		} else {
+			cout<<ID<<" "<<tree.getData()<<endl;
+		}
+	}
+}
 
 
 
@@ -481,13 +492,7 @@ bool LAPSE(HuffTree* &huffmanTree, string name, int &result)
 		HuffTree* manTree = new HuffTree(character, frequency,0);
         treeArray.push(manTree);
     }
-	priority_queue<HuffTree*, vector<HuffTree*>, Compare> copyTreeArray = treeArray;
-for (int i = 0; i < treeArray.size(); i++) {
-		HuffTree* tree = copyTreeArray.top();
-		copyTreeArray.pop();
-		LeafNode* leafA = static_cast<LeafNode*>(tree->root());
-		cout<<leafA->val()<<" "<<leafA->weight()<<endl;
-	}
+	
 	int count = 0;
 	
 	while (treeArray.size() > 1) {
@@ -504,7 +509,6 @@ for (int i = 0; i < treeArray.size(); i++) {
 	huffmanTree = treeArray.top();
 	treeArray.pop();
 	
-
 	//huffmanTree->printHuffmanTree(huffmanTree->root());
 	
 	if (huffmanTree->root()->isLeaf()) {
@@ -530,7 +534,7 @@ void simulate(string filename)
 	ifstream ss(filename);
 	string str, maxsize, name, num;
 	int result = 0;
-	HuffTree* huffmanTree = NULL;
+	HuffTree* lastCus = NULL;
 	unordered_map<int,BSTree> gojo;
 	while(ss >> str)
 	{ 
@@ -543,20 +547,32 @@ void simulate(string filename)
         {
             ss >> name;
 			cout<<"LAPSE"<<" "<<name<<endl;
-			if (LAPSE(huffmanTree,name,result))
-			chooseRes(result,gojo);
+			HuffTree* huffmanTree = NULL;
+			if (LAPSE(huffmanTree,name,result)) {
+				deleteTree(lastCus);
+				lastCus = huffmanTree;
+				if (result % 2 == 1) {
+                int ID = result % MAXSIZE + 1;
+                gojo[ID].add(result);
+                // Assuming getData is a method in your BSTree class
+                cout << gojo[ID].getData() << endl;
+            }
+			} else {
+				deleteTree(huffmanTree);
+			}
+			
 
     	} else if (str == "KOKUSEN") {
 			cout<<"KOKUSEN"<<endl;
-			//KOKUSEN();
+			KOKUSEN(gojo);
 		} else if (str == "KEITEIKEN") {
 			ss >> num;
 			cout<<"KEITEIKEN"<<" "<<num<<endl;
 			//KEITEIKEN(stoi(num));
 		} else if (str == "HAND") {
 			cout<<"HAND"<<endl;
-			huffmanTree->printHuffmanTree(huffmanTree->root());
-			huffmanTree->printPostOrder(huffmanTree->root());
+			lastCus->printHuffmanTree(lastCus->root());
+			lastCus->printPostOrder(lastCus->root());
 		} else if (str == "LIMITLESS") {
 			ss >> num;
 			cout<<"LIMITLESS"<<" "<<num<<endl;
@@ -567,6 +583,7 @@ void simulate(string filename)
 			//CLEAVE(stoi(num));
 		}
 	}
-	//delete enter;
+	
+	deleteTree(lastCus);
 	return;
 }

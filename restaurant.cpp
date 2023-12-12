@@ -147,7 +147,47 @@ public:
 	}
 };
 */
+class BSTree {
+public: 
+	class Node;
+private:
+	Node* root;
+	int count;
+public:
+	BSTree() : root(nullptr), count(0) {}
+    ~BSTree() {}
+	int size() {
+		return count;
+	}
+	void insert(const int &data,Node* root) {
+		if (root == NULL) {
+			Node* temp = new Node(data);
+			root = temp;
+			count++;
+			return;
+		}
+		if (data < root->data) {
+			insert(data,this->root->pLeft);
+		} else {
+			insert(data,this->root->pRight);
+		}
+	}
+	void add(int data) {
+		insert(data,this->root);
+	}
 
+class Node
+    {
+    private:
+        int data;
+        Node *pLeft, *pRight;
+        friend class BSTree;
+
+    public:
+        Node(int value) : data(value), pLeft(NULL), pRight(NULL) {}
+        ~Node() {}
+    };
+};
 
 // Huffman tree node abstract base class
 class HuffNode {
@@ -315,9 +355,9 @@ HuffNode* rotateRight(HuffNode* &root) {
 		printPostOrder(node->left());
 		printPostOrder(node->right());
 		if (node->isLeaf()) {
-			cout<<static_cast<LeafNode*>(node)->val()<<endl;
+			cout<<static_cast<LeafNode*>(node)->val()<<"\n";
 		} else
-		cout<<node->weight()<<endl;
+		cout<<node->weight()<<"\n";
 	}
 };
 class Compare {
@@ -386,7 +426,17 @@ void deleteTree(HuffTree* &tree) {
 	deleteRoot(root);
 	delete tree;
 }
-void LAPSE(HuffTree* &huffmanTree, string name)
+
+
+void chooseRes(int result, vector<BSTree> &gojo){
+	int ID = result % MAXSIZE + 1;
+	i*
+}
+
+
+
+
+bool LAPSE(HuffTree* &huffmanTree, string name, int &result)
 {
 	map<char, int> frequencyMap;
     for (char c : name) {
@@ -394,7 +444,7 @@ void LAPSE(HuffTree* &huffmanTree, string name)
     }
 	if (frequencyMap.size() < 3) {
         // Less than 3 different characters
-        return;
+        return false;
     }
 	string encryptedName = name;
     for (char& c : encryptedName) {
@@ -453,7 +503,6 @@ for (int i = 0; i < treeArray.size(); i++) {
 	
 
 	//huffmanTree->printHuffmanTree(huffmanTree->root());
-	int result;
 	
 	if (huffmanTree->root()->isLeaf()) {
 		result = 0;
@@ -471,13 +520,15 @@ for (int i = 0; i < treeArray.size(); i++) {
 		result = bits.to_ulong();
 		cout<<result<<endl;
 	}
-	return;
+	return true;
 }
 void simulate(string filename)
 {
 	ifstream ss(filename);
 	string str, maxsize, name, num;
+	int result = 0;
 	HuffTree* huffmanTree = NULL;
+	vector<BSTree> gojo(MAXSIZE);
 	while(ss >> str)
 	{ 
 		if(str == "MAXSIZE")
@@ -489,7 +540,9 @@ void simulate(string filename)
         {
             ss >> name;
 			cout<<"LAPSE"<<" "<<name<<endl;
-			LAPSE(huffmanTree,name);
+			if (LAPSE(huffmanTree,name,result))
+			chooseRes(result,gojo);
+
     	} else if (str == "KOKUSEN") {
 			cout<<"KOKUSEN"<<endl;
 			//KOKUSEN();
@@ -501,7 +554,6 @@ void simulate(string filename)
 			cout<<"HAND"<<endl;
 			huffmanTree->printHuffmanTree(huffmanTree->root());
 			huffmanTree->printPostOrder(huffmanTree->root());
-			//HAND();
 		} else if (str == "LIMITLESS") {
 			ss >> num;
 			cout<<"LIMITLESS"<<" "<<num<<endl;

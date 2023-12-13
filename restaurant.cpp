@@ -152,12 +152,16 @@ public:
 	class Node;
 private:
 	Node* root;
+	vector<int> order;
 	int count;
 public:
 	BSTree() : root(nullptr), count(0) {}
     ~BSTree() {}
 	Node* getRoot() const {
 		return root;
+	}
+	vector<int> getOrder() const {
+		return order;
 	}
 	int getData() const {
 		return root->data;
@@ -167,8 +171,8 @@ public:
 	}
 	void insert(const int &data,Node* &root) {
 		if (root == NULL) {
-			Node* temp = new Node(data);
-			root = temp;
+			
+			root = new Node(data);
 			count++;
 			return;
 		}
@@ -180,16 +184,16 @@ public:
 	}
 	void add(int data) {
 		insert(data,this->root);
+		order.push_back(data);
 	}
-	void BSTtoArray(Node*root, int A[])
+	void BSTtoArray(Node*root, int* &A, int &pos)
 {
-    static int pos = 0;
     if(root == NULL) return;
 
-    BSTtoArray(root->pLeft, A);
-    A[pos++] = root->data;
-    BSTtoArray(root->pRight, A);
 
+    BSTtoArray(root->pLeft, A, pos);
+    A[pos++] = root->data;
+    BSTtoArray(root->pRight, A,pos);
 }
 	void print(Node* root, int indent) const {
         if (root == nullptr) {
@@ -462,19 +466,21 @@ void deleteTree(HuffTree* &tree) {
 
 
 
-void KOKUSEN(unordered_map<int,BSTree> &gojo){
-	for (int i = 0; i < MAXSIZE; i++) {
-		gojo[3].add(i);
+void KOKUSEN(vector<BSTree*> &gojo){
+	for (int j = 0; j < MAXSIZE; j++) {
+		gojo[2]->add(j);
 	}
-	for (auto& entry : gojo) {
-		int ID = entry.first;
-		BSTree tree = entry.second;
-		tree.print(tree.getRoot(), 0);
-		int *A = new int[tree.sizeOf()];
-		tree.BSTtoArray(tree.getRoot(), A);
-		for(int i = 0; i < tree.sizeOf(); i++)
-        cout << A[i] << " ";
+	for (int i = 1; i <= MAXSIZE; i++) {
+		if (gojo[i]->sizeOf() == 0) {
+			cout << i << " " << "EMPTY" << endl;
+			continue;
+		}
+		BSTree* tree = gojo[i];
+		vector<int> order = tree->getOrder();
+		for(int i = 0; i < order.size(); i++)
+        cout <<" "<<order[i] <<endl;
 	}
+	cout<<endl;
 
 }
 
@@ -522,6 +528,12 @@ bool LAPSE(HuffTree* &huffmanTree, string name, int &result)
 		HuffTree* manTree = new HuffTree(character, frequency,0);
         treeArray.push(manTree);
     }
+	priority_queue<HuffTree*, vector<HuffTree*>, Compare> treeArray2 = treeArray;
+	while (!treeArray2.empty()) {
+		HuffTree* tree = treeArray2.top();
+		treeArray2.pop();
+		cout<<static_cast<LeafNode*>(tree->root())->val()<<" "<<tree->root()->weight()<<endl;
+	}
 	
 	int count = 0;
 	
@@ -565,13 +577,17 @@ void simulate(string filename)
 	string str, maxsize, name, num;
 	int result = 0;
 	HuffTree* lastCus = NULL;
-	unordered_map<int,BSTree> gojo;
+	vector<BSTree*> gojo;
 	while(ss >> str)
 	{ 
 		if(str == "MAXSIZE")
 		{
 			ss >> maxsize;
 			MAXSIZE = stoi(maxsize); 
+			for (int i = 0; i <= MAXSIZE; i++) {
+				BSTree* tree = new BSTree();
+				gojo.push_back(tree);
+			}
     	}
         else if(str == "LAPSE") 
         {
@@ -582,8 +598,16 @@ void simulate(string filename)
 				deleteTree(lastCus);
 				lastCus = huffmanTree;
 				if (result % 2 == 1) {
-                int ID = result % MAXSIZE + 1;
-                gojo[ID].add(result);
+					int ID = result % MAXSIZE + 1;
+					gojo[ID]->add(result);
+					gojo[ID]->add(153);
+					gojo[ID]->add(450);
+					gojo[ID]->add(500);
+					gojo[ID]->add(100);
+					gojo[ID]->add(200);
+					gojo[ID]->add(50);
+					gojo[ID]->add(120);
+					
 				}
                 // Assuming getData is a method in your BSTree class
 			} else {

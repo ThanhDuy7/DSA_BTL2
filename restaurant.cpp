@@ -173,15 +173,41 @@ public:
 			return;
 		}
 		if (data < root->data) {
-			insert(data,this->root->pLeft);
+			insert(data,root->pLeft);
 		} else {
-			insert(data,this->root->pRight);
+			insert(data,root->pRight);
 		}
 	}
 	void add(int data) {
 		insert(data,this->root);
 	}
+	void BSTtoArray(Node*root, int A[])
+{
+    static int pos = 0;
+    if(root == NULL) return;
 
+    BSTtoArray(root->pLeft, A);
+    A[pos++] = root->data;
+    BSTtoArray(root->pRight, A);
+
+}
+	void print(Node* root, int indent) const {
+        if (root == nullptr) {
+            return;
+        }
+
+        // Print the right subtree
+        print(root->pRight, indent + 4);
+
+        // Print the current node with indentation
+        for (int i = 0; i < indent; i++) {
+            std::cout << " ";
+        }
+        std::cout << root->data << std::endl;
+
+        // Print the left subtree
+        print(root->pLeft, indent + 4);
+    }
 class Node
     {
     private:
@@ -435,17 +461,21 @@ void deleteTree(HuffTree* &tree) {
 
 
 
-void KOKUSEN(unordered_map<int,BSTree> &gojo){
 
+void KOKUSEN(unordered_map<int,BSTree> &gojo){
+	for (int i = 0; i < MAXSIZE; i++) {
+		gojo[3].add(i);
+	}
 	for (auto& entry : gojo) {
 		int ID = entry.first;
 		BSTree tree = entry.second;
-		if (tree.sizeOf() == 0) {
-			cout<<ID<<" "<<"0"<<endl;
-		} else {
-			cout<<ID<<" "<<tree.getData()<<endl;
-		}
+		tree.print(tree.getRoot(), 0);
+		int *A = new int[tree.sizeOf()];
+		tree.BSTtoArray(tree.getRoot(), A);
+		for(int i = 0; i < tree.sizeOf(); i++)
+        cout << A[i] << " ";
 	}
+
 }
 
 
@@ -554,9 +584,8 @@ void simulate(string filename)
 				if (result % 2 == 1) {
                 int ID = result % MAXSIZE + 1;
                 gojo[ID].add(result);
+				}
                 // Assuming getData is a method in your BSTree class
-                cout << gojo[ID].getData() << endl;
-            }
 			} else {
 				deleteTree(huffmanTree);
 			}

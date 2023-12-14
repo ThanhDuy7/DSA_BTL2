@@ -4,152 +4,66 @@ int MAXSIZE = 0;
 const long long MOD = 1e9 + 7;
 vector<vector<long long>> C;
 
-/*
-template <class T>
-class AVLtree
-{
-public: 
-	class Node;
-private:
-	Node* root;
-public:
-	AVLtree(): root(NULL) {}
-	~AVLtree(){}
-	int getHeight() {
-		return this->getHeightRec(this->root);
-	}
 
-	void AVLdelete(Node* &root,const T &value, bool &shorter) {
-		if (root == NULL) {
-			shorter = false;
-			return;
-		} else if (value < root->data) {
-			AVLdelete(root->pLeft, value, shorter);
-			if (shorter) {
-				deleteRightBalance(root, shorter);
-			}
-		} else if (value > root->data) {
-			AVLdelete(root->pRight, value, shorter);
-			if (shorter) {
-				deleteLeftBalance(root, shorter);
-			}
-		} else {
-			Node* temp = root;
-			if (!root->pRight) {
-				root = root->pLeft;
-				shorter = true;
-				delete temp;
-				return;
-			}
-			if (!root->pLeft) {
-				root = root->pRight;
-				shorter = true;
-				delete temp;
-				return;
-			}
-			temp = root->pLeft;
-			while(temp->pRight) {
-				temp = temp->pRight;
-			}
-			
+
+class Heap {
+protected:
+	struct HeapNode {
+        int numberGuest;
+        int id;
+		int order;
+		HeapNode() {
+			numberGuest = 0;
+			id = 0;
+			order = 0;
 		}
-	}
-	void remove(const T &value)
-    {
-        if (root == NULL) return;
-		bool shorter;
-		AVLdelete(root,value,shorter);
-    }
-	class Node
-    {
-    private:
-        T data;
-        Node *pLeft, *pRight;
-        BalanceValue balance;
-        friend class AVLTree<T>;
-
-    public:
-        Node(T value) : data(value), pLeft(NULL), pRight(NULL), balance(EH) {}
-        ~Node() {}
     };
-};
-*/
-// Heap class
-/*
-template <typename E> class heap {
-private:
-	E* Heap; // Pointer to the heap array
-	int maxsize; // Maximum size of the heap
-	int n; // Number of elements now in the heap
-	// Helper function to put element in its correct place
-	void siftdown(int pos) {
-		while (!isLeaf(pos)) { // Stop if pos is a leaf
-			int j = leftchild(pos); int rc = rightchild(pos);
-			if (rc < n) {
-				if (Heap[rc]->weight() < Heap[j]->weight()) 
-					j = rc; // Set j to greater child’s value
-			}
-			if (Heap[pos]->weight() < Heap[j]->weight()) return; // Done
-			swap(Heap[pos], Heap[j]);
-			pos = j; // Move down
-		}
-	}
+
+    HeapNode* elements;
+    int count;
+	long long first;
+    // ID, numberGuest
+    unordered_map<int, int> idToIndex;  // ID, HeapIndex
+	class sooner {
 public:
-	heap(E* h, int num, int max) // Constructor
-	{ Heap = h; n = num; maxsize = max;}
-	int size() const // Return current heap size
-	{ return n; }
-	bool isLeaf(int pos) const // True if pos is a leaf
-	{ return (pos >= n/2) && (pos < n); }
-	int leftchild(int pos) const
-	{ return 2*pos + 1; } // Return leftchild position
-	int rightchild(int pos) const
-	{ return 2*pos + 2; } // Return rightchild position
-	int parent(int pos) const // Return parent position
-	{ return (pos-1)/2; }
-	void buildHeap() // Heapify contents of Heap
-	{ for (int i=n/2-1; i>=0; i--) siftdown(i); }
-	// Insert "it" into the heap
-	void insert(const E& it) {
-		int curr = n++;
-		Heap[curr] = it; // Start at end of heap
-		// Now sift up until curr’s parent > curr
-		while ((curr!=0) &&
-		(Heap[curr] < Heap[parent(curr)])) {
-			swap(Heap[curr], Heap[parent(curr)]);
-			curr = parent(curr);
+	bool operator()(const Heap::HeapNode& a, const Heap::HeapNode& b)
+	{
+		if(a.numberGuest == b.numberGuest) {
+			return a.order <  b.order;
 		}
-	}
-	void printHeap() const {
-        for (int i = 0; i < n; ++i) {
-            cout << Heap[i] << " ";
-        }
-        cout << std::endl;
-    }
-// Remove first value
-	E removefirst() {
-		//Assert (n > 0, "Heap is empty");
-		swap(Heap[0], Heap[--n]); // std::swap first with last value
-		if (n != 0) siftdown(0); // Siftdown new root val
-		return Heap[n]; // Return deleted value
-	}
-	// Remove and return element at specified position
-	E remove(int pos) {
-		//Assert((pos >= 0) && (pos < n), "Bad position");
-		if (pos == (n-1)) n--; // Last element, no work to do
-		else {
-			std::swap(Heap[pos], Heap[--n]); // std::swap with last value
-			while ((pos != 0) &&
-			(Heap[pos] < Heap[parent(pos)])) {
-				swap(Heap[pos], Heap[parent(pos)]); // Push up large key
-				pos = parent(pos);
-			}
-			if (n != 0) siftdown(pos); // Push down small key
-		}
-	return Heap[n];
+		return a.numberGuest < b.numberGuest;
 	}
 };
-*/
+	priority_queue<HeapNode, vector<HeapNode>, sooner> pq;
+public:
+    Heap() {
+        this->count = 0;
+		this->first = 0;
+        this->elements = new HeapNode[5];
+    }
+    ~Heap()
+    {
+        delete[]elements;
+    }
+    void push(int item, int id) {
+	}
+    bool isEmpty();
+    bool contains(int item);
+    int peek();
+    bool pop();
+    int size();
+    
+    void printHeap()
+    {
+        for (int i = 0; i < MAXSIZE; i++)
+           cout << elements[i].numberGuest << ", "<<elements[i].id<<", "<<elements[i].order<<endl;
+    }
+private:
+    void reheapUp(int position);
+    void reheapDown(int position);
+};
+
+
 class BSTree {
 public: 
 	class Node;
@@ -609,8 +523,6 @@ void KOKUSEN(vector<BSTree*> &gojo){
 		for(int i = 0; i < order.size(); i++)
         cout<<order[i].first <<" "<<order[i].second <<endl;
 	}
-	cout<<endl;
-
 }
 
 
@@ -707,6 +619,7 @@ void simulate(string filename)
 	int result = 0;
 	HuffTree* lastCus = NULL;
 	vector<BSTree*> gojo;
+	Heap sukuna;
 	while(ss >> str)
 	{ 
 		if(str == "MAXSIZE")
@@ -718,6 +631,7 @@ void simulate(string filename)
 				BSTree* tree = new BSTree();
 				gojo.push_back(tree);
 			}
+			
     	}
         else if(str == "LAPSE") 
         {
@@ -727,8 +641,11 @@ void simulate(string filename)
 			if (LAPSE(huffmanTree,name,result)) {
 				deleteTree(lastCus);
 				lastCus = huffmanTree;
-				if (result % 2 == 1) {
-					int ID = result % MAXSIZE + 1;
+				int ID = result % MAXSIZE + 1;
+				if (result % 2 == 0) {
+					gojo[ID]->add(result);
+				} else {
+					
 				}
                 // Assuming getData is a method in your BSTree class
 			} else {
@@ -742,6 +659,7 @@ void simulate(string filename)
 		} else if (str == "KEITEIKEN") {
 			ss >> num;
 			cout<<"KEITEIKEN"<<" "<<num<<endl;
+			sukuna.printHeap();
 			//KEITEIKEN(stoi(num));
 		} else if (str == "HAND") {
 			cout<<"HAND"<<endl;

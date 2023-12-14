@@ -208,6 +208,7 @@ public:
 	virtual int Level() = 0;
 	virtual int Order() = 0;
 	virtual void setLevel(int level) = 0;
+	virtual void setOrder(int order) = 0;
 	virtual HuffNode* left() = 0;
 	virtual HuffNode* right() = 0;
 	virtual void setLeft(HuffNode* b) = 0;
@@ -226,6 +227,7 @@ public:
 	int weight() { return wgt; }
 	int Level() { return level; }
 	void setLevel(int level) { this->level = level; }
+	void setOrder(int order) { this->order = order; }
 	int Order() { return order; }
 	char val() { return it; }
 	bool isLeaf() { return true; }
@@ -248,6 +250,7 @@ public:
 	int weight() { return wgt; }
 	int Level() { return level; }
 	void setLevel(int level) { this->level = level; }
+	void setOrder(int order) { this->order = order; }
 	int Order() { return order; }
 	bool isLeaf() { return false; }
 	HuffNode* left() { return lc; }
@@ -296,46 +299,62 @@ HuffNode* rotateRight(HuffNode* &root) {
 		temp->setLevel(max(temp->left()->Level(),root->Level()) + 1);
 		return temp;
 	}
-	void balanceLeft(HuffNode* &root) {
+	HuffNode* balanceLeft(HuffNode* &root) {
 		HuffNode* left = root->left();
 		int leftBalance = left->left()->Level() - left->right()->Level();
 
 		if (leftBalance >= 0) {
+			//cout<<"childLeftHigher"<<endl;
 			root = rotateRight(root);
+			//printHuffmanTree(root);
 		} else if (leftBalance <= -1) {
+			//cout<<"childRightHigher"<<endl;
 			left = rotateLeft(left);
+			root->setLeft(left);
+			//printHuffmanTree(root);
 			root = rotateRight(root);
+			//printHuffmanTree(root);
 		}
+		return root;
 	}
-	void balanceRight(HuffNode* &root) {
+	HuffNode* balanceRight(HuffNode* &root) {
 		HuffNode* right = root->right();
 		int rightBalance = right->left()->Level() - right->right()->Level();
 
 		if (rightBalance <= -1) {
+			//cout<<"childRightHigher"<<endl;
 			root = rotateLeft(root);
+			//printHuffmanTree(root);
 		} else if (rightBalance >= 1) {
+			//cout<<"childLeftHigher"<<endl;
 			right = rotateRight(right);
+			root->setRight(right);
 			root = rotateLeft(root);
 		}
+		return root;
 	}
-	void balanceTree(HuffNode* &root, int& count) {
+	HuffNode* balanceTree(HuffNode* &root, int& count) {
 		if (root->isLeaf()) {
-			return;
+			return root;
 		}
-		if (count >= 3) return;
+		if (count >= 3) return root;
 		int balance = root->left()->Level() - root->right()->Level();
 
-		if (balance > 1) { // leftHigher
-			balanceLeft(root);
+		if (balance > 1) { 
+			cout<<"leftHigher"<<endl;
+			root = balanceLeft(root);
 			count++;
 		} else if (balance < -1) {
-			balanceRight(root);
+			cout<<"rightHigher"<<endl;
+			//printHuffmanTree(root);
+			root = balanceRight(root);
 			count++;
 		}
 		HuffNode* left = root->left();
-		balanceTree(left,count);
+		root->setLeft(balanceTree(left,count));
 		HuffNode* right = root->right();
-		balanceTree(right,count);
+		root->setRight(balanceTree(right,count));
+		return root;
 	}
 	void print(const std::string& prefix, HuffNode* node, bool isLeft) {
     if (node != nullptr) {
@@ -579,13 +598,19 @@ bool LAPSE(HuffTree* &huffmanTree, string name, int &result)
 	int count = 0;
 	
 	while (treeArray.size() > 1) {
+		cout<<"count"<<count<<endl;
         HuffTree* left = treeArray.top();
         treeArray.pop();
-
+		//cout<<"order:"<<left->root()->Order()<<endl;
         HuffTree* right = treeArray.top();
         treeArray.pop();
+		//cout<<"order:"<<right->root()->Order()<<endl;
         HuffTree* node =new HuffTree(left, right,++count);
+		node->root()->setOrder(count);
         treeArray.push(node);
+		//cout<<treeArray.size()<<": "<<node->root()->Order()<<endl;
+		//node->printHuffmanTree(node->root());
+		cout<<endl;
 		delete left;
 		delete right;
     }
@@ -641,6 +666,7 @@ void simulate(string filename)
 			if (LAPSE(huffmanTree,name,result)) {
 				deleteTree(lastCus);
 				lastCus = huffmanTree;
+				lastCus->printHuffmanTree(lastCus->root());
 				int ID = result % MAXSIZE + 1;
 				if (result % 2 == 0) {
 					gojo[ID]->add(result);

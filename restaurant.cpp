@@ -1,6 +1,9 @@
 #include "main.h"
 
 int MAXSIZE = 0;
+const long long MOD = 1e9 + 7;
+vector<vector<long long>> C;
+
 /*
 template <class T>
 class AVLtree
@@ -152,15 +155,16 @@ public:
 	class Node;
 private:
 	Node* root;
-	vector<int> order;
+	vector<pair<int,int>> order;
 	int count;
+	int first;
 public:
-	BSTree() : root(nullptr), count(0) {}
+	BSTree() : root(nullptr), count(0), first(0) {}
     ~BSTree() {}
 	Node* getRoot() const {
 		return root;
 	}
-	vector<int> getOrder() const {
+	vector<pair<int,int>> getOrder() const {
 		return order;
 	}
 	int getData() const {
@@ -169,10 +173,66 @@ public:
 	int sizeOf() {
 		return count;
 	}
+	void clear(Node* &root) {
+		if (root == NULL) return;
+		clear(root->pLeft);
+		clear(root->pRight);
+		delete root;
+		root = NULL;
+		count = 0;
+	}
+	void clear() {
+		clear(this->root);
+	}
+	void removeEle(const int &val,const int &key,Node* &root) {
+		if (root == NULL) return;
+		if (root->data == val) {
+			if (root->key == key) {
+				if (root->pLeft == NULL ) {
+					Node* delNode = root;
+					root = root->pRight;
+					delete delNode;
+					count--;
+					return;
+				} else if (root->pRight == NULL){
+					Node* delNode = root;
+					root = root->pLeft;
+					delete delNode;
+					count--;
+					return;
+				} else {
+					Node* delNode = root->pRight;
+					while (delNode->pLeft != NULL) {
+						delNode = delNode->pLeft;
+					}
+					root->data = delNode->data;
+					root->key = delNode->key;
+					removeEle(delNode->data,delNode->key,root->pRight);
+				}
+			}  else {
+				removeEle(val,key,root->pRight);
+			}
+		} else if ( val > root->data) {
+			removeEle(val,key,root->pRight);
+		} else {
+			removeEle(val,key,root->pLeft);
+		}
+	}
+	void removeNum(int num) {
+		if (num >= count) {
+			clear();
+			return;
+		}
+		for (int i = 0; i < num; i++) {
+			removeEle(order[i].first,order[i].second,this->root);
+			order.erase(order.begin());
+		}
+	}
 	void insert(const int &data,Node* &root) {
 		if (root == NULL) {
 			
 			root = new Node(data);
+			root->key = first++;
 			count++;
 			return;
 		}
@@ -184,24 +244,23 @@ public:
 	}
 	void add(int data) {
 		insert(data,this->root);
-		order.push_back(data);
+		pair<int,int> p(data,first-1);
+		order.push_back(p);
 	}
-	void BSTtoArray(Node*root, int* &A, int &pos)
-{
-    if(root == NULL) return;
 
-
-    BSTtoArray(root->pLeft, A, pos);
-    A[pos++] = root->data;
-    BSTtoArray(root->pRight, A,pos);
-}
-	void print(Node* root, int indent) const {
+	void print(Node* root) {
+		if (root == NULL) return;
+		print(root->pLeft);
+		cout<<root->data<<"\n";
+		print(root->pRight);
+	}
+	void printTree(Node* root, int indent) const {
         if (root == nullptr) {
             return;
         }
 
         // Print the right subtree
-        print(root->pRight, indent + 4);
+        printTree(root->pRight, indent + 4);
 
         // Print the current node with indentation
         for (int i = 0; i < indent; i++) {
@@ -210,12 +269,13 @@ public:
         std::cout << root->data << std::endl;
 
         // Print the left subtree
-        print(root->pLeft, indent + 4);
+        printTree(root->pLeft, indent + 4);
     }
 class Node
     {
     private:
         int data;
+		int key;
         Node *pLeft, *pRight;
         friend class BSTree;
 
@@ -463,22 +523,95 @@ void deleteTree(HuffTree* &tree) {
 	delete tree;
 }
 
+void deleteVector(vector<BSTree*> &gojo) {
+	for (auto i = 0; i < gojo.size(); i++) {
+		gojo[i]->clear();
+	}
+	gojo.clear();
+}
+// Computing pascal's triangle for finding nCr
+void fillPascalTriangle(int size) {
+
+    C.resize(size + 1);
+
+    for (int i = 0; i <= size; ++i) {
+
+        C[i].resize(i + 1);
+
+        // Set value of nCr = 1, for r = 0 and r = n
+
+        C[i][0] = C[i][i] = 1;
+
+        for (int j = 1; j < i; ++j)
+            C[i][j] = (C[i - 1][j - 1] + C[i - 1][j]) % MOD;
+    }
+}
+int countPermutations(vector<int> &nums) {
+
+    int n = nums.size();
+
+    if (n <= 2)
+        return 1;
+
+    // find left sub-sequence elements and right sub-sequence elements
+    vector<int> left_subtree, right_subtree;
+
+    /*
+        The first element is the root of BST.
+        The elements smaller than the root form the left subtree of the root node.
+        The elements larger than the root form the right subtree of the root node.
+    */
+
+    for (int i = 1; i < n; ++i) {
+
+        if (nums[i] < nums[0])
+            left_subtree.push_back(nums[i]);
+
+        else
+            right_subtree.push_back(nums[i]);
+    }
+
+    // recursion with left subtree and right subtree
+
+    long long left_res = countPermutations(left_subtree);
+
+    long long right_res = countPermutations(right_subtree);
+
+    int left = left_subtree.size(), right = right_subtree.size();
+    int ans = (C[left + right][left] * left_res % MOD) * right_res % MOD;
+
+    return ans;
+}
+
 
 
 
 void KOKUSEN(vector<BSTree*> &gojo){
-	for (int j = 0; j < MAXSIZE; j++) {
-		gojo[2]->add(j);
-	}
+	gojo[2]->add(3);
+	gojo[2]->add(2);
+	gojo[2]->add(3);
+	gojo[2]->add(2);
+
 	for (int i = 1; i <= MAXSIZE; i++) {
 		if (gojo[i]->sizeOf() == 0) {
 			cout << i << " " << "EMPTY" << endl;
 			continue;
 		}
 		BSTree* tree = gojo[i];
-		vector<int> order = tree->getOrder();
+		vector<pair<int,int>> order = tree->getOrder();
+		int n = order.size();
+		fillPascalTriangle(n);
+		vector<int> firstVector;
+		for (const auto& p : order) {
+        	firstVector.push_back(p.first);
+		}
+		long long y = countPermutations(firstVector) % MAXSIZE;
+		cout<<y<<endl;
+		tree->removeNum(y);
+		order.clear();
+		order = tree->getOrder();
 		for(int i = 0; i < order.size(); i++)
-        cout <<" "<<order[i] <<endl;
+        cout<<order[i].first <<" "<<order[i].second <<endl;
 	}
 	cout<<endl;
 
@@ -601,13 +734,8 @@ void simulate(string filename)
 					int ID = result % MAXSIZE + 1;
 					gojo[ID]->add(result);
 					gojo[ID]->add(153);
-					gojo[ID]->add(450);
 					gojo[ID]->add(500);
-					gojo[ID]->add(100);
-					gojo[ID]->add(200);
-					gojo[ID]->add(50);
-					gojo[ID]->add(120);
-					
+					gojo[ID]->add(450);
 				}
                 // Assuming getData is a method in your BSTree class
 			} else {
@@ -629,14 +757,19 @@ void simulate(string filename)
 		} else if (str == "LIMITLESS") {
 			ss >> num;
 			cout<<"LIMITLESS"<<" "<<num<<endl;
-			//LIMITLESS(stoi(num));
+			int number = stoi(num);
+			if (gojo[number]->sizeOf() == 0) {
+				cout << number << " " << "EMPTY" << endl;
+				continue;
+			}
+			gojo[number]->print(gojo[number]->getRoot());
 		} else {	//CLEAVE <NUM>
 			ss >> num;
 			cout<<"CLEAVE"<<" "<<num<<endl;
 			//CLEAVE(stoi(num));
 		}
 	}
-	
+	deleteVector(gojo);
 	deleteTree(lastCus);
 	return;
 }

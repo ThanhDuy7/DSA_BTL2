@@ -525,8 +525,9 @@ void deleteTree(HuffTree* &tree) {
 
 void deleteVector(vector<BSTree*> &gojo) {
 	for (auto i = 0; i < gojo.size(); i++) {
-		gojo[i]->clear();
-	}
+        gojo[i]->clear();
+        delete gojo[i];  // Delete the BSTree object
+    }
 	gojo.clear();
 }
 // Computing pascal's triangle for finding nCr
@@ -587,11 +588,6 @@ int countPermutations(vector<int> &nums) {
 
 
 void KOKUSEN(vector<BSTree*> &gojo){
-	gojo[2]->add(3);
-	gojo[2]->add(2);
-	gojo[2]->add(3);
-	gojo[2]->add(2);
-
 	for (int i = 1; i <= MAXSIZE; i++) {
 		if (gojo[i]->sizeOf() == 0) {
 			cout << i << " " << "EMPTY" << endl;
@@ -717,6 +713,7 @@ void simulate(string filename)
 		{
 			ss >> maxsize;
 			MAXSIZE = stoi(maxsize); 
+			
 			for (int i = 0; i <= MAXSIZE; i++) {
 				BSTree* tree = new BSTree();
 				gojo.push_back(tree);
@@ -732,10 +729,6 @@ void simulate(string filename)
 				lastCus = huffmanTree;
 				if (result % 2 == 1) {
 					int ID = result % MAXSIZE + 1;
-					gojo[ID]->add(result);
-					gojo[ID]->add(153);
-					gojo[ID]->add(500);
-					gojo[ID]->add(450);
 				}
                 // Assuming getData is a method in your BSTree class
 			} else {

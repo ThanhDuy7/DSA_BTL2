@@ -1,8 +1,7 @@
 MAXSIZE 5
 LAPSE Johnuigfifbahjasbdfhjbasdhjf
-LAPSE dauhduwhhhhujiajiiihwufhwdwaydgygwygydgygwaygUUUUWUHHBDgehufhuehfhuiehuifhus
 HAND
-LIMITLESS 2
+LIMITLESS 4
 KEITEIKEN 2
 KOKUSEN
 CLEAVE 1

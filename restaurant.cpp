@@ -17,6 +17,7 @@ protected:
 			id = 0;
 			order = 0;
 		}
+		queue<int> orderQueue;
     };
 
     HeapNode* elements;
@@ -39,13 +40,14 @@ public:
     Heap() {
         this->count = 0;
 		this->first = 0;
-        this->elements = new HeapNode[5];
+        this->elements = new HeapNode[10];
     }
     ~Heap()
     {
         delete[]elements;
     }
     void push(int item, int id) {
+
 	}
     bool isEmpty();
     bool contains(int item);
@@ -58,9 +60,14 @@ public:
         for (int i = 0; i < MAXSIZE; i++)
            cout << elements[i].numberGuest << ", "<<elements[i].id<<", "<<elements[i].order<<endl;
     }
-private:
-    void reheapUp(int position);
-    void reheapDown(int position);
+	void setCapacity(int maxsize) {
+		HeapNode* newElements = new HeapNode[maxsize];
+		delete[] elements;
+		elements = newElements;
+		
+	}
+	void reheapUp(int position);
+	void reheapDown(int position);
 };
 
 
@@ -581,13 +588,6 @@ void KOKUSEN(vector<BSTree*> &gojo){
 	}
 }
 
-void printQueue(priority_queue<HuffTree*, vector<HuffTree*>, Compare> pq) {
-	while (!pq.empty()) {
-		HuffTree* tree = pq.top();
-		pq.pop();
-		cout<<tree->root()->weight()<<" "<<tree->root()->Order()<<" | ";
-	}
-}
 
 bool LAPSE(HuffTree* &huffmanTree, string name, int &result)
 {
@@ -641,7 +641,6 @@ bool LAPSE(HuffTree* &huffmanTree, string name, int &result)
 	int count = 0;
 	
 	while (treeArray.size() > 1) {
-		cout<<"count"<<count<<endl;
         HuffTree* left = treeArray.top();
         treeArray.pop();
 	
@@ -651,17 +650,11 @@ bool LAPSE(HuffTree* &huffmanTree, string name, int &result)
         HuffTree* node =new HuffTree(left, right,++count);
 		node->root()->setOrder(count);
         treeArray.push(node);
-		printQueue(treeArray);
-		//cout<<treeArray.size()<<": "<<node->root()->Order()<<endl;
-		//node->printHuffmanTree(node->root());
-		cout<<endl;
 		delete left;
 		delete right;
     }
 	huffmanTree = treeArray.top();
 	treeArray.pop();
-	
-	//huffmanTree->printHuffmanTree(huffmanTree->root());
 	
 	if (huffmanTree->root()->isLeaf()) {
 		result = 0;
@@ -700,6 +693,8 @@ void simulate(string filename)
 				BSTree* tree = new BSTree();
 				gojo.push_back(tree);
 			}
+			sukuna.setCapacity(MAXSIZE);
+
 			
     	}
         else if(str == "LAPSE") 
@@ -715,7 +710,7 @@ void simulate(string filename)
 				if (result % 2 == 0) {
 					gojo[ID]->add(result);
 				} else {
-					
+					sukuna.push(result,ID);
 				}
                 // Assuming getData is a method in your BSTree class
 			} else {
@@ -733,7 +728,7 @@ void simulate(string filename)
 			//KEITEIKEN(stoi(num));
 		} else if (str == "HAND") {
 			cout<<"HAND"<<endl;
-			lastCus->printHuffmanTree(lastCus->root());
+			//lastCus->printHuffmanTree(lastCus->root());
 			lastCus->printPostOrder(lastCus->root());
 		} else if (str == "LIMITLESS") {
 			ss >> num;

@@ -274,7 +274,15 @@ public:
 		HuffNode* right = r->root();
 		Root = new IntlNode(left, right, order);
 		int count = 0;
-		balanceTree(Root,count);
+		bool rotate = false;
+		while (count <3) {
+			balanceTree(Root,count,rotate);
+			if (!rotate) 
+			break;
+			rotate = false;
+		}
+			
+		
 	}
 	~HuffTree() {
 	}
@@ -304,16 +312,18 @@ HuffNode* rotateRight(HuffNode* &root) {
 		int leftBalance = left->left()->Level() - left->right()->Level();
 
 		if (leftBalance >= 0) {
-			//cout<<"childLeftHigher"<<endl;
 			root = rotateRight(root);
-			//printHuffmanTree(root);
 		} else if (leftBalance <= -1) {
-			//cout<<"childRightHigher"<<endl;
 			left = rotateLeft(left);
 			root->setLeft(left);
-			//printHuffmanTree(root);
+
+			root->setLevel(max(root->left()->Level(),root->right()->Level()) + 1);
+
+
 			root = rotateRight(root);
-			//printHuffmanTree(root);
+
+			root->setLevel(max(root->left()->Level(),root->right()->Level()) + 1);
+			
 		}
 		return root;
 	}
@@ -322,40 +332,67 @@ HuffNode* rotateRight(HuffNode* &root) {
 		int rightBalance = right->left()->Level() - right->right()->Level();
 
 		if (rightBalance <= -1) {
-			//cout<<"childRightHigher"<<endl;
 			root = rotateLeft(root);
-			//printHuffmanTree(root);
 		} else if (rightBalance >= 1) {
-			//cout<<"childLeftHigher"<<endl;
 			right = rotateRight(right);
 			root->setRight(right);
+
+
+			root->setLevel(max(root->left()->Level(),root->right()->Level()) + 1);
+
 			root = rotateLeft(root);
+
+			root->setLevel(max(root->left()->Level(),root->right()->Level()) + 1);
 		}
 		return root;
 	}
-	HuffNode* balanceTree(HuffNode* &root, int& count) {
+	
+	int shortestDeep(HuffNode* root) {
 		if (root->isLeaf()) {
+			return 0;
+		}
+		int left = shortestDeep(root->left());
+		int right = shortestDeep(root->right());
+		return min(left,right) + 1;
+	}
+	
+	HuffNode* balanceTree(HuffNode* &root, int& count, bool &rotate) {
+		if (root->isLeaf()) {
+			rotate = false;
 			return root;
 		}
-		if (count >= 3) return root;
-		int balance = root->left()->Level() - root->right()->Level();
-
-		if (balance > 1) { 
-			cout<<"leftHigher"<<endl;
-			root = balanceLeft(root);
-			count++;
-		} else if (balance < -1) {
-			cout<<"rightHigher"<<endl;
-			//printHuffmanTree(root);
-			root = balanceRight(root);
-			count++;
+		if (count >= 3) {
+			rotate = false;
+			return root;
 		}
+		int balance = root->left()->Level() - root->right()->Level();
+		
+		if (balance > 1) { 
+			root = balanceLeft(root);
+			root->setLevel(max(root->left()->Level(),root->right()->Level()) + 1);
+			count++;
+			rotate = true;
+			return root;
+		} else if (balance < -1) {
+			root = balanceRight(root);
+			root->setLevel(max(root->left()->Level(),root->right()->Level()) + 1);
+			count++;
+			rotate = true;
+			return root;
+		} 
 		HuffNode* left = root->left();
-		root->setLeft(balanceTree(left,count));
+		root->setLeft(balanceTree(left,count,rotate));
+
+		root->setLevel(max(root->left()->Level(),root->right()->Level()) + 1);
+		
+		if (rotate) return root;
 		HuffNode* right = root->right();
-		root->setRight(balanceTree(right,count));
+		root->setRight(balanceTree(right,count,rotate));
+		root->setLevel(max(root->left()->Level(),root->right()->Level()) + 1);
+		if (rotate) return root;
 		return root;
 	}
+	
 	void print(const std::string& prefix, HuffNode* node, bool isLeft) {
     if (node != nullptr) {
         std::cout << prefix << (isLeft ? "|--- " : "\\--- ") << node->weight()<< " "<<node->Level();
@@ -364,8 +401,8 @@ HuffNode* rotateRight(HuffNode* &root) {
 		}
 		cout<<endl;
         if (!node->isLeaf()) {
-            print(prefix + (isLeft ? "|     " : "      "), static_cast<IntlNode*>(node)->left(), true);
-            print(prefix + (isLeft ? "|     " : "      "), static_cast<IntlNode*>(node)->right(), false);
+            print(prefix + (isLeft ? "|     " : "      "), static_cast<IntlNode*>(node)->right(), true);
+            print(prefix + (isLeft ? "|     " : "      "), static_cast<IntlNode*>(node)->left(), false);
         } 
     }
 }
@@ -544,7 +581,13 @@ void KOKUSEN(vector<BSTree*> &gojo){
 	}
 }
 
-
+void printQueue(priority_queue<HuffTree*, vector<HuffTree*>, Compare> pq) {
+	while (!pq.empty()) {
+		HuffTree* tree = pq.top();
+		pq.pop();
+		cout<<tree->root()->weight()<<" "<<tree->root()->Order()<<" | ";
+	}
+}
 
 bool LAPSE(HuffTree* &huffmanTree, string name, int &result)
 {
@@ -601,13 +644,14 @@ bool LAPSE(HuffTree* &huffmanTree, string name, int &result)
 		cout<<"count"<<count<<endl;
         HuffTree* left = treeArray.top();
         treeArray.pop();
-		//cout<<"order:"<<left->root()->Order()<<endl;
+	
         HuffTree* right = treeArray.top();
         treeArray.pop();
-		//cout<<"order:"<<right->root()->Order()<<endl;
+		
         HuffTree* node =new HuffTree(left, right,++count);
 		node->root()->setOrder(count);
         treeArray.push(node);
+		printQueue(treeArray);
 		//cout<<treeArray.size()<<": "<<node->root()->Order()<<endl;
 		//node->printHuffmanTree(node->root());
 		cout<<endl;

@@ -299,7 +299,7 @@ public:
 			return;
 		}
 		for (int i = 0; i < num; i++) {
-			removeEle(order[i].first,order[i].second,this->root);
+			removeEle(order[0].first,order[0].second,this->root);
 			order.erase(order.begin());
 		}
 	}

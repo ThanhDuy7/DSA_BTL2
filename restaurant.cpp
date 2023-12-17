@@ -30,9 +30,9 @@ public:
 	bool operator()(const Heap::HeapNode& a, const Heap::HeapNode& b)
 	{
 		if(a.numberGuest == b.numberGuest) {
-			return a.order <  b.order;
+			return a.order >  b.order;
 		}
-		return a.numberGuest < b.numberGuest;
+		return a.numberGuest > b.numberGuest;
 	}
 };
 	priority_queue<HeapNode, vector<HeapNode>, sooner> pq;
@@ -86,14 +86,62 @@ public:
     bool isEmpty();
     bool contains(int item);
     int peek();
-    bool pop();
     int size();
     
+	void remove(int num) {
+		if (count == 0) return;
+		int n = num;
+		if (n > count) n = count;
+		vector<HeapNode> tempVector;
+		for (int i = 0; i < n; i++) {
+			HeapNode node = pq.top();
+			pq.pop();
+			int index = idToIndex[node.id];
+			for (int j = 0; j < num;j++) {
+				node.numberGuest--;
+				cout<<node.orderQueue.front()<<"-"<<node.id<<"\n"<<endl;
+				node.orderQueue.pop();
+				if (node.numberGuest == 0) break;
+			}
+			if (node.numberGuest > 0) {
+				node.order = first++;	
+				elements[index] = node;
+				reheapUp(index);
+				tempVector.push_back(node);
+			} else {
+				idToIndex.erase(node.id);
+				elements[index] = elements[--count];
+				elements[count] = HeapNode();
+				if (count == 0) break;
+				idToIndex[elements[index].id] = index;
+				reheapUp(index);
+				reheapDown(index);
+			}
+		}
+		for (const auto& node : tempVector) {
+			pq.push(node);
+		}
+
+	}
     void printHeap()
     {
         for (int i = 0; i < MAXSIZE; i++)
            cout << elements[i].numberGuest << ", "<<elements[i].id<<", "<<elements[i].order<<endl;
     }
+	
+	void printQueue() {
+		priority_queue<HeapNode, vector<HeapNode>, sooner> queueCopy = pq;
+		while (!queueCopy.empty()) {
+			HeapNode node = queueCopy.top();
+			queueCopy.pop();
+			cout<<node.numberGuest<<" "<<node.id<<" "<<node.order<<" "<<idToIndex[node.id]<<endl;
+				while(!node.orderQueue.empty()) {
+					cout<<node.orderQueue.front()<<" ";
+					node.orderQueue.pop();
+				}
+			cout<<endl;
+		}
+	}
 	void setCapacity(int maxsize) {
 		HeapNode* newElements = new HeapNode[maxsize];
 		delete[] elements;
@@ -658,7 +706,6 @@ int countPermutations(vector<int> &nums) {
 
 
 
-
 void KOKUSEN(vector<BSTree*> &gojo){
 	for (int i = 1; i <= MAXSIZE; i++) {
 		if (gojo[i]->sizeOf() == 0) {
@@ -809,9 +856,11 @@ void simulate(string filename)
 					sukuna.push(20,2);
 					sukuna.push(10,1);
 					sukuna.push(40,1);
-					sukuna.push(50,1);
 					sukuna.push(60,3);
 					sukuna.push(70,2);
+					sukuna.push(50,2);
+					sukuna.push(90,2);
+					sukuna.push(80,1);
 				
                 // Assuming getData is a method in your BSTree class
 			} else {
@@ -826,7 +875,11 @@ void simulate(string filename)
 			ss >> num;
 			cout<<"KEITEIKEN"<<" "<<num<<endl;
 			sukuna.printHeap();
-			//KEITEIKEN(stoi(num));
+			sukuna.printQueue();
+			int count = stoi(num);
+			
+			sukuna.remove(count);
+			sukuna.printHeap();
 		} else if (str == "HAND") {
 			cout<<"HAND"<<endl;
 			lastCus->printPostOrder(lastCus->root());

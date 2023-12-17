@@ -77,6 +77,7 @@ public:
 			elements[count].id = id;
 			elements[count].order = first++;
 			elements[count].orderQueue.push(item);
+			idToIndex[id] = count;
 			pq.push(elements[count]);
 			count++;
 			reheapUp(count-1);
@@ -677,7 +678,7 @@ void KOKUSEN(vector<BSTree*> &gojo){
 		tree->removeNum(y);
 		order.clear();
 		order = tree->getOrder();
-		for(int i = 0; i < order.size(); i++)
+		for(unsigned int i = 0; i < order.size(); i++)
         cout<<order[i].first <<" "<<order[i].second <<endl;
 	}
 }
@@ -803,7 +804,7 @@ void simulate(string filename)
 				int ID = result % MAXSIZE + 1;
 				if (result % 2 == 0) {
 					gojo[ID]->add(result);
-				} else {
+				} 
 					sukuna.push(30,1);
 					sukuna.push(20,2);
 					sukuna.push(10,1);
@@ -811,7 +812,7 @@ void simulate(string filename)
 					sukuna.push(50,1);
 					sukuna.push(60,3);
 					sukuna.push(70,2);
-				}
+				
                 // Assuming getData is a method in your BSTree class
 			} else {
 				deleteTree(huffmanTree);

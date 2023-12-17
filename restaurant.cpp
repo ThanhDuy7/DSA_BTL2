@@ -5,7 +5,6 @@ const long long MOD = 1e9 + 7;
 vector<vector<long long>> C;
 
 
-
 class Heap {
 protected:
 	struct HeapNode {
@@ -83,11 +82,6 @@ public:
 			reheapUp(count-1);
 		}
 	}
-    bool isEmpty();
-    bool contains(int item);
-    int peek();
-    int size();
-    
 	void remove(int num) {
 		if (count == 0) return;
 		int n = num;
@@ -99,7 +93,7 @@ public:
 			int index = idToIndex[node.id];
 			for (int j = 0; j < num;j++) {
 				node.numberGuest--;
-				cout<<node.orderQueue.front()<<"-"<<node.id<<"\n"<<endl;
+				cout<<node.orderQueue.front()<<"-"<<node.id<<"\n";
 				node.orderQueue.pop();
 				if (node.numberGuest == 0) break;
 			}
@@ -125,6 +119,7 @@ public:
 	}
     void printHeap()
     {
+		if (count == 0) return;
         for (int i = 0; i < MAXSIZE; i++)
            cout << elements[i].numberGuest << ", "<<elements[i].id<<", "<<elements[i].order<<endl;
     }
@@ -141,6 +136,22 @@ public:
 				}
 			cout<<endl;
 		}
+	}
+	void preOrder (int index) {
+		if (index >= count) return;
+		queue<int> q = elements[index].orderQueue;
+		stack<int> s;
+		while (!q.empty()) {
+			s.push(q.front());
+			q.pop();
+		}
+		while (!s.empty()) {
+			cout<<elements[index].id<<"-"<<s.top()<<"\n";
+			s.pop();
+		}
+
+		preOrder(2*index+1);
+		preOrder(2*index+2);
 	}
 	void setCapacity(int maxsize) {
 		HeapNode* newElements = new HeapNode[maxsize];
@@ -318,23 +329,6 @@ public:
 		cout<<root->data<<"\n";
 		print(root->pRight);
 	}
-	void printTree(Node* root, int indent) const {
-        if (root == nullptr) {
-            return;
-        }
-
-        // Print the right subtree
-        printTree(root->pRight, indent + 4);
-
-        // Print the current node with indentation
-        for (int i = 0; i < indent; i++) {
-            std::cout << " ";
-        }
-        std::cout << root->data << std::endl;
-
-        // Print the left subtree
-        printTree(root->pLeft, indent + 4);
-    }
 class Node
     {
     private:
@@ -463,6 +457,7 @@ HuffNode* rotateRight(HuffNode* &root) {
 
 		if (leftBalance >= 0) {
 			root = rotateRight(root);
+			root->setLevel(max(root->left()->Level(),root->right()->Level()) + 1);
 		} else if (leftBalance <= -1) {
 			left = rotateLeft(left);
 			root->setLeft(left);
@@ -480,9 +475,10 @@ HuffNode* rotateRight(HuffNode* &root) {
 	HuffNode* balanceRight(HuffNode* &root) {
 		HuffNode* right = root->right();
 		int rightBalance = right->left()->Level() - right->right()->Level();
-
-		if (rightBalance <= -1) {
+		
+		if (rightBalance <= 0) {
 			root = rotateLeft(root);
+			root->setLevel(max(root->left()->Level(),root->right()->Level()) + 1);
 		} else if (rightBalance >= 1) {
 			right = rotateRight(right);
 			root->setRight(right);
@@ -515,7 +511,10 @@ HuffNode* rotateRight(HuffNode* &root) {
 			rotate = false;
 			return root;
 		}
-		int balance = root->left()->Level() - root->right()->Level();
+		
+		HuffNode* left = root->left();
+		HuffNode* right = root->right();
+		int balance = left->Level() - right->Level();
 		
 		if (balance > 1) { 
 			root = balanceLeft(root);
@@ -530,13 +529,12 @@ HuffNode* rotateRight(HuffNode* &root) {
 			rotate = true;
 			return root;
 		} 
-		HuffNode* left = root->left();
+		
 		root->setLeft(balanceTree(left,count,rotate));
 
 		root->setLevel(max(root->left()->Level(),root->right()->Level()) + 1);
 		
 		if (rotate) return root;
-		HuffNode* right = root->right();
 		root->setRight(balanceTree(right,count,rotate));
 		root->setLevel(max(root->left()->Level(),root->right()->Level()) + 1);
 		if (rotate) return root;
@@ -564,16 +562,16 @@ HuffNode* rotateRight(HuffNode* &root) {
 
 		print("", node, false);
 	}
-	void printPostOrder(HuffNode* node) {
+	void printInOrder(HuffNode* node) {
 		if (!node) {
 			return;
 		}
-		printPostOrder(node->left());
-		printPostOrder(node->right());
+		printInOrder(node->left());
 		if (node->isLeaf()) {
 			cout<<static_cast<LeafNode*>(node)->val()<<"\n";
 		} else
 		cout<<node->weight()<<"\n";
+		printInOrder(node->right());
 	}
 };
 class Compare {
@@ -709,7 +707,6 @@ int countPermutations(vector<int> &nums) {
 void KOKUSEN(vector<BSTree*> &gojo){
 	for (int i = 1; i <= MAXSIZE; i++) {
 		if (gojo[i]->sizeOf() == 0) {
-			cout << i << " " << "EMPTY" << endl;
 			continue;
 		}
 		BSTree* tree = gojo[i];
@@ -721,12 +718,9 @@ void KOKUSEN(vector<BSTree*> &gojo){
         	firstVector.push_back(p.first);
 		}
 		long long y = countPermutations(firstVector) % MAXSIZE;
-		cout<<y<<endl;
 		tree->removeNum(y);
 		order.clear();
 		order = tree->getOrder();
-		for(unsigned int i = 0; i < order.size(); i++)
-        cout<<order[i].first <<" "<<order[i].second <<endl;
 	}
 }
 
@@ -773,13 +767,6 @@ bool LAPSE(HuffTree* &huffmanTree, string name, int &result)
 		HuffTree* manTree = new HuffTree(character, frequency,0);
         treeArray.push(manTree);
     }
-	priority_queue<HuffTree*, vector<HuffTree*>, Compare> treeArray2 = treeArray;
-	while (!treeArray2.empty()) {
-		HuffTree* tree = treeArray2.top();
-		treeArray2.pop();
-		cout<<static_cast<LeafNode*>(tree->root())->val()<<" "<<tree->root()->weight()<<endl;
-	}
-	
 	int count = 0;
 	
 	while (treeArray.size() > 1) {
@@ -800,6 +787,7 @@ bool LAPSE(HuffTree* &huffmanTree, string name, int &result)
 	
 	if (huffmanTree->root()->isLeaf()) {
 		result = 0;
+		return false;
 	} else {
 		unordered_map<char, string> huffCodes;
     	buildHuffCodes(huffmanTree->root(), "", huffCodes);
@@ -812,7 +800,6 @@ bool LAPSE(HuffTree* &huffmanTree, string name, int &result)
 		}
 		bitset<64> bits(str);
 		result = bits.to_ulong();
-		cout<<result<<endl;
 	}
 	return true;
 }
@@ -822,6 +809,7 @@ void simulate(string filename)
 	string str, maxsize, name, num;
 	int result = 0;
 	HuffTree* lastCus = NULL;
+	HuffTree* huffmanTree = NULL;
 	vector<BSTree*> gojo;
 	Heap sukuna;
 	while(ss >> str)
@@ -837,65 +825,51 @@ void simulate(string filename)
 			}
 			sukuna.setCapacity(MAXSIZE);
 
-			
     	}
         else if(str == "LAPSE") 
         {
             ss >> name;
-			cout<<"LAPSE"<<" "<<name<<endl;
-			HuffTree* huffmanTree = NULL;
+			
 			if (LAPSE(huffmanTree,name,result)) {
+				//cout<<"result "<<result<<" "<<endl;
 				deleteTree(lastCus);
 				lastCus = huffmanTree;
-				lastCus->printHuffmanTree(lastCus->root());
 				int ID = result % MAXSIZE + 1;
-				if (result % 2 == 0) {
+
+				if (result % 2 == 1) {
 					gojo[ID]->add(result);
-				} 
-					sukuna.push(30,1);
-					sukuna.push(20,2);
-					sukuna.push(10,1);
-					sukuna.push(40,1);
-					sukuna.push(60,3);
-					sukuna.push(70,2);
-					sukuna.push(50,2);
-					sukuna.push(90,2);
-					sukuna.push(80,1);
+				} else {
+					sukuna.push(result,ID);
+				}
 				
-                // Assuming getData is a method in your BSTree class
-			} else {
-				deleteTree(huffmanTree);
-			}
+			} 
 			
 
     	} else if (str == "KOKUSEN") {
-			cout<<"KOKUSEN"<<endl;
+			//cout<<"KOKUSEN"<<endl;
 			KOKUSEN(gojo);
 		} else if (str == "KEITEIKEN") {
 			ss >> num;
-			cout<<"KEITEIKEN"<<" "<<num<<endl;
-			sukuna.printHeap();
-			sukuna.printQueue();
+			//cout<<"KEITEIKEN"<<" "<<num<<endl;
 			int count = stoi(num);
-			
+			//sukuna.printQueue();
 			sukuna.remove(count);
-			sukuna.printHeap();
+			//sukuna.printHeap();
 		} else if (str == "HAND") {
-			cout<<"HAND"<<endl;
-			lastCus->printPostOrder(lastCus->root());
+			//lastCus->printHuffmanTree(lastCus->root());
+			lastCus->printInOrder(lastCus->root());
 		} else if (str == "LIMITLESS") {
 			ss >> num;
-			cout<<"LIMITLESS"<<" "<<num<<endl;
+			//cout<<"LIMITLESS"<<" "<<num<<endl;
 			int number = stoi(num);
 			if (gojo[number]->sizeOf() == 0) {
-				cout << number << " " << "EMPTY" << endl;
 				continue;
 			}
 			gojo[number]->print(gojo[number]->getRoot());
 		} else {	//CLEAVE <NUM>
 			ss >> num;
-			cout<<"CLEAVE"<<" "<<num<<endl;
-			//CLEAVE(stoi(num));
+			//cout<<"CLEAVE"<<" "<<num<<endl;
+			sukuna.preOrder(0);
 		}
 	}
 	deleteVector(gojo);

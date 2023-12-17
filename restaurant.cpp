@@ -628,7 +628,7 @@ void deleteTree(HuffTree* &tree) {
 }
 
 void deleteVector(vector<BSTree*> &gojo) {
-	for (auto i = 0; i < gojo.size(); i++) {
+	for (unsigned int i = 0; i < gojo.size(); i++) {
         gojo[i]->clear();
         delete gojo[i];  // Delete the BSTree object
     }

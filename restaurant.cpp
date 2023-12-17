@@ -47,7 +47,40 @@ public:
         delete[]elements;
     }
     void push(int item, int id) {
+		if (idToIndex.find(id) != idToIndex.end()) {
+			int index = idToIndex[id];
+			elements[index].numberGuest++;
+			elements[index].order = first++;
+			elements[index].orderQueue.push(item);
+			vector<HeapNode> tempVector;
+			while (!pq.empty()) {
+				HeapNode node = pq.top();
+				pq.pop();
+				if (node.id == id) {
+					node.numberGuest = elements[index].numberGuest;
+					node.order = elements[index].order;
+					node.orderQueue = elements[index].orderQueue;
 
+				}
+				tempVector.push_back(node);
+				if (node.id == id) {
+					break;
+				}
+			}
+
+			for (const auto& node : tempVector) {
+				pq.push(node);
+			}	
+			reheapDown(index);
+		}else {
+			elements[count].numberGuest = 1;
+			elements[count].id = id;
+			elements[count].order = first++;
+			elements[count].orderQueue.push(item);
+			pq.push(elements[count]);
+			count++;
+			reheapUp(count-1);
+		}
 	}
     bool isEmpty();
     bool contains(int item);
@@ -66,8 +99,69 @@ public:
 		elements = newElements;
 		
 	}
-	void reheapUp(int position);
-	void reheapDown(int position);
+	void reheapUp(int position) {
+		while (position > 0) {
+			int parent = (position - 1) / 2;
+			if (elements[position].numberGuest < elements[parent].numberGuest) {
+				HeapNode temp = elements[position];
+				elements[position] = elements[parent];
+				elements[parent] = temp;
+				idToIndex[elements[position].id] = position;
+				idToIndex[elements[parent].id] = parent;
+				position = parent;
+			} else if (elements[position].numberGuest == elements[parent].numberGuest) {
+				if (elements[position].order < elements[parent].order) {
+					HeapNode temp = elements[position];
+					elements[position] = elements[parent];
+					elements[parent] = temp;
+					idToIndex[elements[position].id] = position;
+					idToIndex[elements[parent].id] = parent;
+					position = parent;
+			} else {
+				break;
+			}
+		} else {
+			break;
+		}
+	}
+	}
+	void reheapDown(int position) {
+		int child = 2 * position + 1;
+		while (child < count) {
+			int rightChild = child + 1;
+			if (rightChild < count && elements[rightChild].numberGuest < elements[child].numberGuest) {
+				child = rightChild;
+			} else if (rightChild < count && elements[rightChild].numberGuest == elements[child].numberGuest) {
+				if (elements[rightChild].order < elements[child].order) {
+					child = rightChild;
+				}
+			}
+			if (elements[position].numberGuest > elements[child].numberGuest) {
+				HeapNode temp = elements[position];
+				elements[position] = elements[child];
+				elements[child] = temp;
+				idToIndex[elements[position].id] = position;
+				idToIndex[elements[child].id] = child;
+				position = child;
+				child = 2 * position + 1;
+			} else if (elements[position].numberGuest == elements[child].numberGuest) {
+				if (elements[position].order > elements[child].order) {
+					HeapNode temp = elements[position];
+					elements[position] = elements[child];
+					elements[child] = temp;
+					idToIndex[elements[position].id] = position;
+					idToIndex[elements[child].id] = child;
+					position = child;
+					child = 2 * position + 1;
+				} else {
+					break;
+				}
+			} else {
+				break;
+			}
+		}
+	
+	}
 };
 
 
@@ -710,7 +804,13 @@ void simulate(string filename)
 				if (result % 2 == 0) {
 					gojo[ID]->add(result);
 				} else {
-					sukuna.push(result,ID);
+					sukuna.push(30,1);
+					sukuna.push(20,2);
+					sukuna.push(10,1);
+					sukuna.push(40,1);
+					sukuna.push(50,1);
+					sukuna.push(60,3);
+					sukuna.push(70,2);
 				}
                 // Assuming getData is a method in your BSTree class
 			} else {
@@ -728,7 +828,6 @@ void simulate(string filename)
 			//KEITEIKEN(stoi(num));
 		} else if (str == "HAND") {
 			cout<<"HAND"<<endl;
-			//lastCus->printHuffmanTree(lastCus->root());
 			lastCus->printPostOrder(lastCus->root());
 		} else if (str == "LIMITLESS") {
 			ss >> num;

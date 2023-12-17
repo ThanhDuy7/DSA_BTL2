@@ -117,41 +117,27 @@ public:
 		}
 
 	}
-    void printHeap()
-    {
-		if (count == 0) return;
-        for (int i = 0; i < MAXSIZE; i++)
-           cout << elements[i].numberGuest << ", "<<elements[i].id<<", "<<elements[i].order<<endl;
-    }
 	
-	void printQueue() {
-		priority_queue<HeapNode, vector<HeapNode>, sooner> queueCopy = pq;
-		while (!queueCopy.empty()) {
-			HeapNode node = queueCopy.top();
-			queueCopy.pop();
-			cout<<node.numberGuest<<" "<<node.id<<" "<<node.order<<" "<<idToIndex[node.id]<<endl;
-				while(!node.orderQueue.empty()) {
-					cout<<node.orderQueue.front()<<" ";
-					node.orderQueue.pop();
-				}
-			cout<<endl;
-		}
-	}
-	void preOrder (int index) {
+	void preOrder (int index,const int num) {
 		if (index >= count) return;
 		queue<int> q = elements[index].orderQueue;
 		stack<int> s;
+		int i = 0;
 		while (!q.empty()) {
+			
 			s.push(q.front());
 			q.pop();
+			
 		}
 		while (!s.empty()) {
+			if (i == num) break;
 			cout<<elements[index].id<<"-"<<s.top()<<"\n";
 			s.pop();
+			i++;
 		}
 
-		preOrder(2*index+1);
-		preOrder(2*index+2);
+		preOrder(2*index+1,num);
+		preOrder(2*index+2,num);
 	}
 	void setCapacity(int maxsize) {
 		HeapNode* newElements = new HeapNode[maxsize];
@@ -672,14 +658,7 @@ int countPermutations(vector<int> &nums) {
     if (n <= 2)
         return 1;
 
-    // find left sub-sequence elements and right sub-sequence elements
     vector<int> left_subtree, right_subtree;
-
-    /*
-        The first element is the root of BST.
-        The elements smaller than the root form the left subtree of the root node.
-        The elements larger than the root form the right subtree of the root node.
-    */
 
     for (int i = 1; i < n; ++i) {
 
@@ -720,7 +699,6 @@ void KOKUSEN(vector<BSTree*> &gojo){
 		long long y = countPermutations(firstVector) % MAXSIZE;
 		tree->removeNum(y);
 		order.clear();
-		order = tree->getOrder();
 	}
 }
 
@@ -831,7 +809,6 @@ void simulate(string filename)
             ss >> name;
 			
 			if (LAPSE(huffmanTree,name,result)) {
-				//cout<<"result "<<result<<" "<<endl;
 				deleteTree(lastCus);
 				lastCus = huffmanTree;
 				int ID = result % MAXSIZE + 1;
@@ -846,30 +823,25 @@ void simulate(string filename)
 			
 
     	} else if (str == "KOKUSEN") {
-			//cout<<"KOKUSEN"<<endl;
 			KOKUSEN(gojo);
 		} else if (str == "KEITEIKEN") {
 			ss >> num;
-			//cout<<"KEITEIKEN"<<" "<<num<<endl;
 			int count = stoi(num);
-			//sukuna.printQueue();
 			sukuna.remove(count);
-			//sukuna.printHeap();
 		} else if (str == "HAND") {
-			//lastCus->printHuffmanTree(lastCus->root());
 			lastCus->printInOrder(lastCus->root());
 		} else if (str == "LIMITLESS") {
 			ss >> num;
-			//cout<<"LIMITLESS"<<" "<<num<<endl;
 			int number = stoi(num);
+			if (number > MAXSIZE) continue;
 			if (gojo[number]->sizeOf() == 0) {
 				continue;
 			}
 			gojo[number]->print(gojo[number]->getRoot());
-		} else {	//CLEAVE <NUM>
+		} else {	
 			ss >> num;
-			//cout<<"CLEAVE"<<" "<<num<<endl;
-			sukuna.preOrder(0);
+			int x = stoi(num);
+			sukuna.preOrder(0,x);
 		}
 	}
 	deleteVector(gojo);
